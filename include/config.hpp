@@ -1,0 +1,3 @@
+#define REND_GRID 1
+#define REND_INFOBOX 2
+#define REND_CUSTOM_RENDER_LOOP 4
