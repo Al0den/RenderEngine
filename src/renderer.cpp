@@ -1,5 +1,8 @@
 #include "../include/renderer.hpp"
 
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
+
 #include <SDL_render.h>
 #include <iostream>
 
@@ -26,18 +29,19 @@ RenderEngine::RenderEngine(int width, int height, int config) {
         exit(1);
     }
 
+    if (TTF_Init() != 0) {
+        std::cerr << "TTF_Init Error: " << TTF_GetError() << std::endl;
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        exit(1);
+    }
+
     surface = SDL_GetWindowSurface(window);
 
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
     zoom_factor = 1.0;
-    balls = nullptr;
-    springs = nullptr;
-    lines = nullptr;
-
-    num_balls = 0;
-    num_springs = 0;
-    num_lines = 0;
 
     h = height;
     w = width;
@@ -51,17 +55,30 @@ RenderEngine::RenderEngine(int width, int height, int config) {
     fps = 60;
 
     renderLoop = false;
+    paused = false;
+    hide = false;
  
     grid = config & REND_GRID;
-    infoBox = config & REND_INFOBOX;
+
+    if(config & REND_INFOBOX) {
+        info_box = new InfoBox(1, 1);
+    } else {
+        info_box = nullptr;
+    }
 
     customRenderFunction = nullptr;
     renderOverlapFunction = nullptr;
 
     startRenderLoop();
+
+    setBackgroundColor(32, 32, 32, 255);
+    setGridColor(242, 242, 242, 255);
 }
 
 RenderEngine::~RenderEngine() {
+    std::vector<Ball> balls;
+    std::vector<Line> lines;
+    std::vector<Spring> springs;
     renderLoop = false;
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
@@ -76,8 +93,8 @@ void RenderEngine::renderFrame() {
 
     drawBackground();
 
-    while(drawn < num_balls + num_springs + num_lines && next_priority < INT_MAX - 1) {
-        for(int i=0; i<num_balls; i++) {
+    while(drawn < balls.size() + springs.size() + lines.size() && next_priority < INT_MAX - 1) {
+        for(int i=0; i<balls.size(); i++) {
             if (balls[i].draw_priority == current_priority) {
                 drawBall(balls[i]);
                 drawn++;
@@ -86,7 +103,7 @@ void RenderEngine::renderFrame() {
                 next_priority = balls[i].draw_priority;
             }
         }
-        for(int i=0; i<num_springs; i++) {
+        for(int i=0; i<springs.size(); i++) {
             if (springs[i].draw_priority == current_priority) {
                 drawSpring(springs[i]);
                 drawn++;
@@ -95,7 +112,7 @@ void RenderEngine::renderFrame() {
                 next_priority = springs[i].draw_priority;
             }
         }
-        for(int i=0; i<num_lines; i++) {
+        for(int i=0; i<lines.size(); i++) {
             if (lines[i].draw_priority == current_priority) {
                 drawLine(lines[i]);
                 drawn++;
@@ -108,13 +125,17 @@ void RenderEngine::renderFrame() {
         next_priority = INT_MAX - 1;
     }
 
+    if(info_box != nullptr && !hide) {
+        info_box->render(renderer, 15, 15);
+    }
+
 }
 
 void RenderEngine::drawBall(Ball b) {
     SDL_SetRenderDrawColor(renderer, b.red, b.green, b.blue, 255);
     int local_x, local_y; 
     posToLocal(*b.center_x, *b.center_y, &local_x, &local_y);
-    double radius = *b.radius * zoom_factor;
+    double radius = b.radius * zoom_factor;
     for (int i=0; i<radius; i++) {
         for(int j=0; j<radius; j++) {
             if (i*i + j*j < radius*radius) {
@@ -142,7 +163,7 @@ void RenderEngine::drawSpring(Spring s) {
     int local_x2, local_y2;
     posToLocal(*s.x1, *s.y1, &local_x1, &local_y1);
     posToLocal(*s.x2, *s.y2, &local_x2, &local_y2);
-    int width = (int)(*s.width * zoom_factor);
+    int width = (int)(s.width * zoom_factor);
     SDL_RenderDrawLine(renderer, local_x1, local_y1, local_x2, local_y2);
 }
 
@@ -151,14 +172,29 @@ void RenderEngine::posToLocal(double x, double y, int *local_x, int *local_y) {
     *local_y = (int)((double)h / 2 - (y + *offset_y) * zoom_factor);
 }
 
+void RenderEngine::setBackgroundColor(int red, int green, int blue, int alpha) {
+    background_color[0] = red;
+    background_color[1] = green;
+    background_color[2] = blue;
+    background_color[3] = alpha;
+}
+
+void RenderEngine::setGridColor(int red, int green, int blue, int alpha) {
+    grid_color[0] = red;
+    grid_color[1] = green;
+    grid_color[2] = blue;
+    grid_color[3] = alpha;
+}
+
 void RenderEngine::drawBackground() {
-    SDL_SetRenderDrawColor(renderer, 32, 32, 32, 32);
+    SDL_SetRenderDrawColor(renderer, background_color[0], background_color[1], background_color[2], background_color[3]);
     SDL_RenderClear(renderer);
-    SDL_SetRenderDrawColor(renderer, 128, 128, 128, 128);
-    int x_off = (int)*offset_x % 100;
-    int y_off = (int)*offset_y % 100;
 
     if (grid) {
+        SDL_SetRenderDrawColor(renderer, grid_color[0], grid_color[1], grid_color[2], grid_color[3]);
+        int x_off = (int)*offset_x % 100;
+        int y_off = (int)*offset_y % 100;
+
         for (int i=0; i<w + 100; i+=100) {
             SDL_RenderDrawLine(renderer, i + x_off, 0, i + x_off, h);
         }
@@ -176,38 +212,19 @@ void RenderEngine::setZoomFactor(double zf) {
 
 void RenderEngine::addBall(Ball b) {
     lock.lock();
-    if (balls == nullptr) {
-        balls = (Ball*)malloc(sizeof(Ball));
-    } else {
-        balls = (Ball*)realloc(balls, (num_balls + 1) * sizeof(Ball));
-    }
-
-    balls[num_balls] = b;
-    num_balls++;
+    balls.push_back(b);
     lock.unlock();
 }
 
 void RenderEngine::addSpring(Spring s) {
     lock.lock();
-    if (springs == nullptr) {
-        springs = (Spring*)malloc(sizeof(Spring));
-    } else {
-        springs = (Spring*)realloc(springs, (num_springs + 1) * sizeof(Spring));
-    }
-    springs[num_springs] = s;
-    num_springs++;
+    springs.push_back(s);
     lock.unlock();
 }
 
 void RenderEngine::addLine(Line l) {
     lock.lock();
-    if (lines == nullptr) {
-        lines = (Line*)malloc(sizeof(Line));
-    } else {
-        lines = (Line*)realloc(lines, (num_lines + 1) * sizeof(Line));
-    }
-    lines[num_lines] = l;
-    num_lines++;
+    lines.push_back(l);
     lock.unlock();
 }
 
@@ -241,6 +258,12 @@ bool RenderEngine::handleEvents() {
             case SDLK_r:
                 *offset_x = 0;
                 *offset_y = 0;
+                break;
+            case SDLK_p:
+                paused = !paused;
+                break;
+            case SDLK_h:
+                hide = !hide;
                 break;
             }
         }

@@ -2,12 +2,14 @@
 
 //#define DEBUG
 
-#include "/opt/homebrew/include/SDL2/SDL.h"
+#include <SDL2/SDL.h>
 
 #include "../include/config.hpp"
 #include "../include/containers.hpp"
+#include "../include/info_box.hpp"
 
 #include <mutex>
+#include <vector>
 
 namespace rend {
     class RenderEngine {
@@ -35,13 +37,19 @@ namespace rend {
 
             void (*customRenderFunction)(SDL_Renderer *renderer, SDL_Window *window);
             void (*renderOverlapFunction)(SDL_Renderer *renderer, SDL_Window *window);
+
+            void setBackgroundColor(int red, int green, int blue, int alpha);
+            void setGridColor(int red, int green, int blue, int alpha);
             
             double *offset_x;
             double *offset_y;
-        private:
 
+            InfoBox *info_box;
+
+            bool paused;
+            bool hide;
+        private:
             bool grid;
-            bool infoBox;
 
             bool renderLoop;
 
@@ -53,14 +61,10 @@ namespace rend {
             SDL_Renderer *renderer;
             SDL_Surface *surface;
             SDL_Event e;
-
-            Ball *balls;
-            Spring *springs;
-            Line *lines;      
-
-            int num_balls;
-            int num_springs;
-            int num_lines;
+            
+            std::vector<Ball> balls;
+            std::vector<Spring> springs;
+            std::vector<Line> lines;
 
             void drawBall(Ball b);
             void drawSpring(Spring s);
@@ -70,6 +74,7 @@ namespace rend {
 
             void posToLocal(double x, double y, int *local_x, int *local_y);
 
-
+            int background_color[4];
+            int grid_color[4];
     };
 }

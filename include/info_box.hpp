@@ -3,7 +3,8 @@
 #include <cstdlib>
 #include <string>
 
-#include "/opt/homebrew/include/SDL2/SDL.h"
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 
 using namespace std;
 
@@ -12,7 +13,6 @@ namespace rend {
         public:
             InfoBox(int num_row, int num_col);
             ~InfoBox();
-            
 
             int addRow();
             int addCol();
@@ -28,7 +28,11 @@ namespace rend {
             void setNameValue(int col, int row, string name, string value);
 
             void render(SDL_Renderer *renderer, int x, int y);
+    
+
         private:
+            TTF_Font *font;
+
             string **info_box_names;
             string **info_box_values;
 
@@ -38,5 +42,7 @@ namespace rend {
             int row_width;
 
             bool fixed_row_width;
+
+            int determineCharWidth();
     };
 }

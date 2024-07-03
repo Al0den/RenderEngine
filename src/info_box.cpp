@@ -1,5 +1,6 @@
 #include "../include/info_box.hpp"
 
+#include <SDL2/SDL_ttf.h>
 #include <cstdlib>
 
 using namespace rend;
@@ -11,8 +12,25 @@ InfoBox::InfoBox(int num_row, int num_col) {
 
     fixed_row_width = false;
 
-    info_box_names = nullptr;
-    info_box_values = nullptr;
+    info_box_names = new string*[num_cols];
+    info_box_values = new string*[num_cols];
+
+    for (int i=0; i<num_cols; i++) {
+        info_box_names[i] = new string[rows_per_col];
+        info_box_values[i] = new string[rows_per_col];
+        
+        for (int j=0; j<rows_per_col; j++) {
+            info_box_names[i][j] = "Empty";
+            info_box_values[i][j] = "Void";
+        }
+    }
+
+    font = TTF_OpenFont("/Users/alois/Desktop/projects/render_engine/include/CourierPrime-Bold.ttf", 16);
+
+    if (font == nullptr) {
+        printf("TTF_OpenFont: %s\n", TTF_GetError());
+        exit(1);
+    }
 }
 
 InfoBox::~InfoBox() {
@@ -26,6 +44,8 @@ InfoBox::~InfoBox() {
             delete[] info_box_values[i];
         }
     }
+    delete[] info_box_names;
+    delete[] info_box_values;
 }
 
 int InfoBox::addRow() {
@@ -156,39 +176,104 @@ int InfoBox::removeCol() {
     return num_cols;
 }
 
-void InfoBox::setName(int col, int row, string name) {
+void InfoBox::setName(int row, int col, string name) {
     if (col >= num_cols || row >= rows_per_col) {
         return;
     }
     info_box_names[col][row] = name;
 }
 
-void InfoBox::setValue(int col, int row, string value) {
+void InfoBox::setValue(int row, int col, string value) {
     if (col >= num_cols || row >= rows_per_col) {
         return;
     }
     info_box_values[col][row] = value;
 }
 
-void InfoBox::setNameValue(int col, int row, string name, string value) {
-    setName(col, row, name);
-    setValue(col, row, value);
+void InfoBox::setNameValue(int row, int col, string name, string value) {
+    setName(row, col, name);
+    setValue(row, col, value);
+}
+
+int InfoBox::determineCharWidth() {
+    if (font == NULL) {
+        printf("Font is not loaded. Cannot determine char width.\n");
+        return 0;
+    }
+
+    SDL_Color color = {255, 255, 255, 255}; 
+    SDL_Surface* surface = TTF_RenderText_Blended(font, "W", color);
+    
+    if (surface == NULL) {
+        printf("Failed to render text for char width measurement. SDL_ttf Error: %s\n", TTF_GetError());
+        return 0;
+    }
+
+    int width = surface->w;
+    SDL_FreeSurface(surface);
+
+    return width;
 }
 
 void InfoBox::render(SDL_Renderer *renderer, int x, int y) {
-    // Display the info box
-    int max_width = 0;
-    SDL_Rect rect;
-
-    for (int i=0; i<num_cols; i++) {
-        for (int j=0; j<rows_per_col; j++) {
-            if (info_box_names[i][j].length() > max_width) {
-                max_width = info_box_names[i][j].length();
+    int max_width_name = 0;
+    int max_width_value = 0;
+    for (int i = 0; i < num_cols; i++) {
+        for (int j = 0; j < rows_per_col; j++) {
+            if (info_box_names[i][j].length() > max_width_name) {
+                max_width_name = info_box_names[i][j].length();
+            }
+            if (info_box_values[i][j].length() > max_width_value) {
+                max_width_value = info_box_values[i][j].length();
             }
         }
     }
 
-    if (fixed_row_width) {
-        max_width = row_width;
+    double padding = 0.3;
+    int char_width = determineCharWidth();
+    int char_height = TTF_FontHeight(font);
+
+    int total_width = (max_width_name + 2 + max_width_value + padding * 2) * char_width * num_cols;
+    int total_height = (char_height + padding) * rows_per_col;
+
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); 
+    SDL_Rect rect = {x, y, total_width, total_height};
+    SDL_RenderFillRect(renderer, &rect);
+
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    int border_width = 1;
+
+    SDL_Rect top_border = {x, y, total_width, border_width};
+    SDL_RenderFillRect(renderer, &top_border);
+    SDL_Rect bottom_border = {x, y + total_height - border_width, total_width, border_width};
+    SDL_RenderFillRect(renderer, &bottom_border);
+    SDL_Rect left_border = {x, y, border_width, total_height};
+    SDL_RenderFillRect(renderer, &left_border);
+    SDL_Rect right_border = {x + total_width - border_width, y, border_width, total_height};
+    SDL_RenderFillRect(renderer, &right_border);
+
+    x += padding * char_width;
+
+    SDL_Color textColor = {255, 255, 255, 255};
+    for (int i = 0; i < num_cols; i++) {
+        for (int j = 0; j < rows_per_col; j++) {
+            if (!info_box_names[i][j].empty()) {
+                std::string text = info_box_names[i][j] + ": " + info_box_values[i][j];
+                
+                SDL_Surface* textSurface = TTF_RenderText_Blended(font, text.c_str(), textColor);
+                if (textSurface) {
+                    SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+                    if (textTexture) {
+                        int text_x = x + padding;
+                        int text_y = y + j * (char_height + padding) + padding;
+                        SDL_Rect textRect = {text_x, text_y, textSurface->w, textSurface->h};
+                        SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+                        SDL_DestroyTexture(textTexture);
+                    }
+                    SDL_FreeSurface(textSurface);
+                }
+            }
+        }
+        x += (max_width_name + 2 + max_width_value + padding * 2) * char_width + 1;
     }
 }

@@ -6,9 +6,9 @@ namespace rend {
         double *y1;
         double *x2;
         double *y2;
-        double *rest_length;
+        double rest_length;
 
-        double *width;
+        double width;
 
         unsigned char red;
         unsigned char green;
@@ -23,7 +23,7 @@ namespace rend {
         double *x2;
         double *y2;
 
-        double *width;
+        double width;
 
         unsigned char red;
         unsigned char green;
@@ -35,7 +35,7 @@ namespace rend {
     struct Ball {
         double *center_x;
         double *center_y;
-        double *radius;
+        double radius;
 
         unsigned char red;
         unsigned char green;
