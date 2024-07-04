@@ -5,8 +5,8 @@
 #include <SDL2/SDL.h>
 
 #include "../include/config.hpp"
-#include "../include/containers.hpp"
 #include "../include/info_box.hpp"
+#include "../include/render_object.hpp"
 
 #include <mutex>
 #include <vector>
@@ -18,20 +18,14 @@ namespace rend {
             ~RenderEngine();
 
             void renderFrame();
-            double zoom_factor;
-
-            void addBall(Ball b);
-            void addSpring(Spring s);
-            void addLine(Line l);
 
             void setZoomFactor(double zf);
+            double getZoomFactor();
+             
+            void attachObject(std::unique_ptr<RenderObject> object);
 
             void startRenderLoop();
             bool handleEvents();
-
-            std::mutex lock;
-
-            SDL_Window *window;
 
             void *RenderLoop();
 
@@ -40,18 +34,34 @@ namespace rend {
 
             void setBackgroundColor(int red, int green, int blue, int alpha);
             void setGridColor(int red, int green, int blue, int alpha);
-            
-            double *offset_x;
-            double *offset_y;
+
+            SDL_Renderer *getRendererHandle();
+            SDL_Window *getWindowHandle();
+            SDL_Surface *getSurfaceHandle();
 
             InfoBox *info_box;
 
+            void posToLocal(double x, double y, int *local_x, int *local_y);
+
+            bool isPaused();
+            bool isHidingInfoBox();
+            void togglePlay();
+            void toggleInfoBox();
+        private:
+            std::mutex lock;
+
+            SDL_Window *window;
+
+            double zoom_factor;
+
+            bool grid;
+            bool renderLoop;
+
+            double *offset_x;
+            double *offset_y;
+
             bool paused;
             bool hide;
-        private:
-            bool grid;
-
-            bool renderLoop;
 
             int w;
             int h;
@@ -61,18 +71,11 @@ namespace rend {
             SDL_Renderer *renderer;
             SDL_Surface *surface;
             SDL_Event e;
-            
-            std::vector<Ball> balls;
-            std::vector<Spring> springs;
-            std::vector<Line> lines;
 
-            void drawBall(Ball b);
-            void drawSpring(Spring s);
-            void drawLine(Line l);
+            std::vector<std::unique_ptr<RenderObject> > objects;
 
             void drawBackground();
-
-            void posToLocal(double x, double y, int *local_x, int *local_y);
+            void renderAllObjects();
 
             int background_color[4];
             int grid_color[4];

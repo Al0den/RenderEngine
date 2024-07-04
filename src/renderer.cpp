@@ -38,9 +38,6 @@ RenderEngine::RenderEngine(int width, int height, int config) {
     }
 
     surface = SDL_GetWindowSurface(window);
-
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-
     zoom_factor = 1.0;
 
     h = height;
@@ -76,9 +73,6 @@ RenderEngine::RenderEngine(int width, int height, int config) {
 }
 
 RenderEngine::~RenderEngine() {
-    std::vector<Ball> balls;
-    std::vector<Line> lines;
-    std::vector<Spring> springs;
     renderLoop = false;
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
@@ -92,79 +86,12 @@ void RenderEngine::renderFrame() {
     int drawn = 0;
 
     drawBackground();
-
-    while(drawn < balls.size() + springs.size() + lines.size() && next_priority < INT_MAX - 1) {
-        for(int i=0; i<balls.size(); i++) {
-            if (balls[i].draw_priority == current_priority) {
-                drawBall(balls[i]);
-                drawn++;
-            }
-            if (balls[i].draw_priority < next_priority) {
-                next_priority = balls[i].draw_priority;
-            }
-        }
-        for(int i=0; i<springs.size(); i++) {
-            if (springs[i].draw_priority == current_priority) {
-                drawSpring(springs[i]);
-                drawn++;
-            }
-            if (springs[i].draw_priority < next_priority) {
-                next_priority = springs[i].draw_priority;
-            }
-        }
-        for(int i=0; i<lines.size(); i++) {
-            if (lines[i].draw_priority == current_priority) {
-                drawLine(lines[i]);
-                drawn++;
-            }
-            if (lines[i].draw_priority < next_priority) {
-                next_priority = lines[i].draw_priority;
-            }
-        }
-        current_priority = next_priority;
-        next_priority = INT_MAX - 1;
-    }
+    renderAllObjects();
 
     if(info_box != nullptr && !hide) {
         info_box->render(renderer, 15, 15);
     }
 
-}
-
-void RenderEngine::drawBall(Ball b) {
-    SDL_SetRenderDrawColor(renderer, b.red, b.green, b.blue, 255);
-    int local_x, local_y; 
-    posToLocal(*b.center_x, *b.center_y, &local_x, &local_y);
-    double radius = b.radius * zoom_factor;
-    for (int i=0; i<radius; i++) {
-        for(int j=0; j<radius; j++) {
-            if (i*i + j*j < radius*radius) {
-                SDL_RenderDrawPoint(renderer, local_x + i, local_y + j);
-                SDL_RenderDrawPoint(renderer, local_x - i, local_y + j);
-                SDL_RenderDrawPoint(renderer, local_x + i, local_y - j);
-                SDL_RenderDrawPoint(renderer, local_x - i, local_y - j);
-            }
-        }
-    }
-}
-
-void RenderEngine::drawLine(Line l) {
-    SDL_SetRenderDrawColor(renderer, l.red, l.green, l.blue, 255);
-    int local_x1, local_y1;
-    int local_x2, local_y2;
-    posToLocal(*l.x1, *l.y1, &local_x1, &local_y1);
-    posToLocal(*l.x2, *l.y2, &local_x2, &local_y2);
-    SDL_RenderDrawLine(renderer, local_x1, local_y1, local_x2, local_y2);
-}
-
-void RenderEngine::drawSpring(Spring s) {
-    SDL_SetRenderDrawColor(renderer, s.red, s.green, s.blue, 255);
-    int local_x1, local_y1;
-    int local_x2, local_y2;
-    posToLocal(*s.x1, *s.y1, &local_x1, &local_y1);
-    posToLocal(*s.x2, *s.y2, &local_x2, &local_y2);
-    int width = (int)(s.width * zoom_factor);
-    SDL_RenderDrawLine(renderer, local_x1, local_y1, local_x2, local_y2);
 }
 
 void RenderEngine::posToLocal(double x, double y, int *local_x, int *local_y) {
@@ -204,28 +131,20 @@ void RenderEngine::drawBackground() {
     }
 }
 
+void RenderEngine::attachObject(std::unique_ptr<RenderObject> object) {
+    lock.lock();
+    objects.push_back(std::move(object));
+    lock.unlock();
+}
+
 void RenderEngine::setZoomFactor(double zf) {
     lock.lock();
     zoom_factor = zf;
     lock.unlock();
 }
 
-void RenderEngine::addBall(Ball b) {
-    lock.lock();
-    balls.push_back(b);
-    lock.unlock();
-}
-
-void RenderEngine::addSpring(Spring s) {
-    lock.lock();
-    springs.push_back(s);
-    lock.unlock();
-}
-
-void RenderEngine::addLine(Line l) {
-    lock.lock();
-    lines.push_back(l);
-    lock.unlock();
+double RenderEngine::getZoomFactor() {
+    return zoom_factor;
 }
 
 bool RenderEngine::handleEvents() {
@@ -291,6 +210,30 @@ void *RenderEngine::RenderLoop() {
     return NULL;
 }
 
+void RenderEngine::renderAllObjects() {
+    int n = objects.size();
+    int current_prio = 0;
+    int next_prio = 0;
+    while(next_prio < INT_MAX) {
+        next_prio = INT_MAX;
+        for(int i=0; i<n; i++) {
+            if(objects[i] == nullptr) {
+                std::cerr << "Null pointer in objects" << std::endl;
+                continue;
+            }
+            if (objects[i]->draw_priority == current_prio) {
+                objects[i]->render(static_cast<void*>(this));
+            } else if(objects[i]->draw_priority < next_prio) {
+                next_prio = objects[i]->draw_priority;
+            }
+        }
+        current_prio++;
+        if(next_prio == INT_MAX) {
+            break;
+        }
+    }
+}
+
 static void* staticRenderLoop(void (*arg)) {
     RenderEngine *engine = static_cast<RenderEngine*>(arg);
     return engine->RenderLoop();
@@ -301,5 +244,33 @@ void RenderEngine::startRenderLoop() {
     renderLoop = true;
     pthread_t render_thread;
     pthread_create(&render_thread, NULL, staticRenderLoop, static_cast<void*>(this));
-
 }
+
+SDL_Renderer *RenderEngine::getRendererHandle() {
+    return renderer;
+}
+
+SDL_Window *RenderEngine::getWindowHandle() {
+    return window;
+}
+
+SDL_Surface *RenderEngine::getSurfaceHandle() {
+    return surface;
+}
+
+bool RenderEngine::isPaused() {
+    return paused;
+}
+
+void RenderEngine::togglePlay() {
+    paused = !paused;
+}
+
+void RenderEngine::toggleInfoBox() {
+    hide = !hide;
+}
+
+bool RenderEngine::isHidingInfoBox() {
+    return hide;
+}
+
