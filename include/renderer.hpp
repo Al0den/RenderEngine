@@ -1,4 +1,5 @@
 #pragma once
+#define ALODEN_RENDER_ENGINE
 
 //#define DEBUG
 
@@ -28,10 +29,6 @@ namespace rend {
             bool handleEvents();
 
             void *RenderLoop();
-
-            void (*customRenderFunction)(SDL_Renderer *renderer, SDL_Window *window);
-            void (*renderOverlapFunction)(SDL_Renderer *renderer, SDL_Window *window);
-
             void setBackgroundColor(int red, int green, int blue, int alpha);
             void setGridColor(int red, int green, int blue, int alpha);
 
@@ -39,7 +36,7 @@ namespace rend {
             SDL_Window *getWindowHandle();
             SDL_Surface *getSurfaceHandle();
 
-            InfoBox *info_box;
+            InfoBox* getInfoBox();
 
             void posToLocal(double x, double y, int *local_x, int *local_y);
 
@@ -71,11 +68,18 @@ namespace rend {
             SDL_Renderer *renderer;
             SDL_Surface *surface;
             SDL_Event e;
+            InfoBox *info_box;
 
             std::vector<std::unique_ptr<RenderObject> > objects;
 
+            void (*customRenderFunction)(SDL_Renderer *renderer, SDL_Window *window);
+            void (*renderOverlapFunction)(SDL_Renderer *renderer, SDL_Window *window);
+
             void drawBackground();
             void renderAllObjects();
+
+            void setCustomRenderFunction(void (override_func)(SDL_Renderer *renderer, SDL_Window *window));
+            void setCustomOverlapFunction(void (override_func)(SDL_Renderer *renderer, SDL_Window *window));
 
             int background_color[4];
             int grid_color[4];
