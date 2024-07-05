@@ -32,6 +32,9 @@ namespace rend {
             void setBackgroundColor(int red, int green, int blue, int alpha);
             void setGridColor(int red, int green, int blue, int alpha);
 
+            void setCustomRenderFunction(void (override_func)(SDL_Renderer *renderer, SDL_Window *window));
+            void setCustomOverlapFunction(void (override_func)(SDL_Renderer *renderer, SDL_Window *window));
+
             SDL_Renderer *getRendererHandle();
             SDL_Window *getWindowHandle();
             SDL_Surface *getSurfaceHandle();
@@ -78,8 +81,6 @@ namespace rend {
             void drawBackground();
             void renderAllObjects();
 
-            void setCustomRenderFunction(void (override_func)(SDL_Renderer *renderer, SDL_Window *window));
-            void setCustomOverlapFunction(void (override_func)(SDL_Renderer *renderer, SDL_Window *window));
 
             int background_color[4];
             int grid_color[4];
