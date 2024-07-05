@@ -1,1 +1,2 @@
-#include "renderer.hpp"
+#include "../include/renderer.hpp"
+#include "../include/render_object.hpp"

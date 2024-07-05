@@ -95,7 +95,7 @@ void RenderEngine::renderFrame() {
 }
 
 void RenderEngine::posToLocal(double x, double y, int *local_x, int *local_y) {
-    *local_x = (int)((double)w / 2 - (x + *offset_x) * zoom_factor);
+    *local_x = (int)((double)w / 2 + (x - *offset_x) * zoom_factor);
     *local_y = (int)((double)h / 2 - (y + *offset_y) * zoom_factor);
 }
 
