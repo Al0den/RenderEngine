@@ -31,9 +31,12 @@ namespace rend {
             void *RenderLoop();
             void setBackgroundColor(int red, int green, int blue, int alpha);
             void setGridColor(int red, int green, int blue, int alpha);
+            void setFPS(int fps);
 
             void setCustomRenderFunction(void (override_func)(SDL_Renderer *renderer, SDL_Window *window));
             void setCustomOverlapFunction(void (override_func)(SDL_Renderer *renderer, SDL_Window *window));
+            void setCustomSDLEventHandler(void (override_func)(SDL_Event *e));
+            void setCustomInfoBoxFunction(void (override_func)(InfoBox *info_box));
 
             SDL_Renderer *getRendererHandle();
             SDL_Window *getWindowHandle();
@@ -41,14 +44,20 @@ namespace rend {
 
             InfoBox* getInfoBox();
 
+            int getHeight();
+            int getWidth();
+            int *getBackgroundColor();
+
             void posToLocal(double x, double y, int *local_x, int *local_y);
 
             bool isPaused();
             bool isHidingInfoBox();
             void togglePlay();
             void toggleInfoBox();
-        private:
+
+            void clearObjects();
             std::mutex lock;
+        private:
 
             SDL_Window *window;
 
@@ -62,6 +71,7 @@ namespace rend {
 
             bool paused;
             bool hide;
+            bool debug;
 
             int w;
             int h;
@@ -77,10 +87,11 @@ namespace rend {
 
             void (*customRenderFunction)(SDL_Renderer *renderer, SDL_Window *window);
             void (*renderOverlapFunction)(SDL_Renderer *renderer, SDL_Window *window);
+            void (*customSDLEventHandler)(SDL_Event *e);
+            void (*customInfoBoxFunction)(InfoBox *info_box);
 
             void drawBackground();
             void renderAllObjects();
-
 
             int background_color[4];
             int grid_color[4];

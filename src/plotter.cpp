@@ -1,0 +1,310 @@
+#include "../include/plotter.hpp"
+#include "../include/renderer.hpp"
+
+#include <iostream>
+
+using namespace rend;
+
+Plotter::Plotter(int x, int y, int width, int height) {
+    plots = std::vector<plot_t>();
+
+    axis_color.r = 255;
+    axis_color.g = 255;
+    axis_color.b = 255;
+    
+    display_x = x;
+    display_y = y;
+    this->width = width;
+    this->height = height;
+
+    x_display_round = 0;
+    y_display_round = 0;
+        
+    x_padding = 70;
+    y_padding = 10;
+
+    relative = false;
+    dynamic = false;
+
+    font = TTF_OpenFont("/Users/alois/Desktop/projects/render_engine/include/fonts/CourierPrime-Bold.ttf", 16);
+    if (font == nullptr) {
+        printf("TTF_OpenFont: %s\n", TTF_GetError());
+        exit(1);
+    }
+
+    SDL_Color color = {255, 255, 255, 255}; 
+    SDL_Surface* surface = TTF_RenderText_Blended(font, "W", color);
+    
+    if (surface == NULL) {
+        printf("Failed to render text for char width measurement. SDL_ttf Error: %s\n", TTF_GetError());
+    }
+
+    char_width = surface->w;
+    SDL_FreeSurface(surface);
+    plot_texture = nullptr;
+
+    previous_update = std::chrono::steady_clock::now();
+    update_frequency = 1000; // in milliseconds
+}
+
+Plotter::~Plotter() {
+    if (plot_texture != nullptr) {
+        SDL_DestroyTexture(plot_texture);
+    }
+}
+
+void Plotter::plot(double *x, double *y, int num_values, SDL_Color color) {
+    plot_t new_plot;
+    new_plot.x = x;
+    new_plot.y = y;
+    new_plot.num_values = num_values;
+    new_plot.color = color;
+    new_plot.link_points = true;
+    plots.push_back(new_plot);
+    return;
+}
+
+void Plotter::drawAxis(SDL_Renderer *renderer) {
+
+    SDL_SetRenderDrawColor(renderer, axis_color.r, axis_color.g, axis_color.b, 255);
+
+    // x-axis
+    int line_start_x, line_start_y;
+    int line_end_x, line_end_y;
+    line_start_x = x_padding;
+    line_start_y = y_padding;
+    line_end_x = x_padding;
+    line_end_y = height - y_padding;
+    
+    SDL_RenderDrawLine(renderer, line_start_x, line_start_y, line_end_x, line_end_y);
+
+    int arrow_length = 10;
+    double theta = - M_PI * 5 / 3;
+    
+    line_end_y = y_padding + arrow_length * sin(theta);
+    line_end_x = x_padding + arrow_length * cos(theta);
+
+    SDL_RenderDrawLine(renderer, line_start_x, line_start_y, line_end_x, line_end_y);
+
+    theta = - M_PI * 4 / 3;
+    line_end_y = y_padding + arrow_length * sin(theta);
+    line_end_x = x_padding + arrow_length * cos(theta);
+
+    SDL_RenderDrawLine(renderer, line_start_x, line_start_y, line_end_x, line_end_y);
+
+    // y-axis
+    line_start_x = x_padding;
+    line_start_y = height - y_padding;
+    line_end_x = width - x_padding;
+    line_end_y = height - y_padding;
+
+    SDL_RenderDrawLine(renderer, line_start_x, line_start_y, line_end_x, line_end_y);
+
+    theta = M_PI / 6;
+    line_start_y = height - y_padding - arrow_length * sin(theta);
+    line_start_x = width - x_padding - arrow_length * cos(theta);
+
+    SDL_RenderDrawLine(renderer, line_start_x, line_start_y, line_end_x, line_end_y);
+
+    theta = M_PI * 11 / 6;
+    line_start_y = height - y_padding - arrow_length * sin(theta);
+    line_start_x = width - x_padding - arrow_length * cos(theta);
+
+    SDL_RenderDrawLine(renderer, line_start_x, line_start_y, line_end_x, line_end_y);
+}
+
+double round_nth_decimal(double value, int n) {
+    return round(value * pow(10, n)) / pow(10, n);
+};
+
+void Plotter::drawAxisText(SDL_Renderer *renderer, double max_x, double max_y) {
+    bool *heights = new bool[4000];
+    bool *widths = new bool[4000];
+
+    for(int i=0; i<4000; i++) {
+        heights[i] = false;
+        widths[i] = false;
+    }
+
+    for(int i=0; i<plots.size(); i++) {
+        for(int j=0; j<plots[i].num_values; j++) {
+            int x = x_padding - char_width;
+            int y = height - y_padding - (plots[i].y[j] / max_y) * (height - 2 * y_padding);
+            std::string text_before_cut = std::to_string(round_nth_decimal(plots[i].y[j], y_display_round));
+            int cut_num = y_display_round > 0 ? y_display_round + 1 : 0;
+            std::string text = text_before_cut.substr(0, text_before_cut.find(".") + cut_num);
+            SDL_Color textColor = {255, 255, 255, 255};
+            SDL_Surface* surface = TTF_RenderText_Blended(font, text.c_str(), textColor);
+            if (surface == NULL) {
+                printf("Failed to render text for char width measurement. SDL_ttf Error: %s\n", TTF_GetError());
+                return;
+            }
+            SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+            if (texture == NULL) {
+                printf("Failed to create texture from surface. SDL Error: %s\n", SDL_GetError());
+                return;
+            }
+            SDL_Rect rect = {x - surface->w, y - surface->h / 2, surface->w, surface->h};
+            // Check that no text is drawn on top of another text
+            bool overlap = false;
+            for(int i=0; i<surface->h; i++) {
+                if(heights[y + i]) {
+                    overlap = true;
+                    break;
+                }
+            }
+            if(!overlap) {
+                for(int i=0; i<surface->h; i++) {
+                    heights[y + i] = true;
+                }
+                SDL_RenderCopy(renderer, texture, NULL, &rect);
+                SDL_FreeSurface(surface);
+                SDL_DestroyTexture(texture);
+            }
+
+            x = x_padding + (plots[i].x[j] / max_x) * (width - 2 * x_padding);
+            y = height - y_padding + char_width;
+
+            text_before_cut = std::to_string(round_nth_decimal(plots[i].x[j], x_display_round));
+            cut_num = x_display_round > 0 ? x_display_round + 1 : 0;
+            text = text_before_cut.substr(0, text_before_cut.find(".") + cut_num);
+            surface = TTF_RenderText_Blended(font, text.c_str(), textColor);
+            if (surface == NULL) {
+                printf("Failed to render text for char width measurement. SDL_ttf Error: %s\n", TTF_GetError());
+                return;
+            }
+            texture = SDL_CreateTextureFromSurface(renderer, surface);
+            if (texture == NULL) {
+                printf("Failed to create texture from surface. SDL Error: %s\n", SDL_GetError());
+                return;
+            }
+            overlap = false;
+            for(int i=0; i<surface->w; i++) {
+                if(widths[x + i]) {
+                    overlap = true;
+                    break;
+                }
+            }
+            if (!overlap) {
+                for (int i=0; i<surface->w + 10; i++) {
+                    widths[x + i] = true;
+                }
+                rect = {x - surface->w / 2, y, surface->w, surface->h};
+                SDL_RenderCopy(renderer, texture, NULL, &rect);
+                SDL_FreeSurface(surface);
+                SDL_DestroyTexture(texture);
+            }
+        }
+    }
+    delete[] heights;
+    delete[] widths;
+}
+
+void Plotter::drawPoints(SDL_Renderer *renderer) {
+    double max_y, min_y = 0;
+    double max_x, min_x = 0;
+
+    for (int i=0; i<plots.size(); i++) {
+        for(int j=0; j<plots[i].num_values; j++) {
+            if(plots[i].x[j] > max_x) {
+                max_x = plots[i].x[j];
+            }
+            if(plots[i].x[j] < min_x) {
+                min_x = plots[i].x[j];
+            }
+            if(plots[i].y[j] > max_y) {
+                max_y = plots[i].y[j];
+            }
+            if(plots[i].y[j] < min_y) {
+                min_y = plots[i].y[j];
+            }
+        }
+    }
+    max_x *= 1.1;
+    max_y *= 1.1;
+    int initial_x = x_padding;
+    int initial_y = height - y_padding;
+
+    int prev_x, prev_y;
+
+    for(int i=0; i<plots.size(); i++) {
+        plot_t current_plot = plots[i];
+        SDL_SetRenderDrawColor(renderer, current_plot.color.r, current_plot.color.g, current_plot.color.b, 255);
+        for (int j=0; j<current_plot.num_values; j++) {
+            int x = initial_x + (current_plot.x[j] - min_x) / (max_x - min_x) * (width - 2 * x_padding);
+            int y = initial_y - (current_plot.y[j] - min_y) / (max_y - min_y) * (height - 2 * y_padding);
+            if(j != 0) {
+                SDL_RenderDrawLine(renderer, prev_x, prev_y, x, y);
+            }
+            prev_x = x;
+            prev_y = y;
+
+            SDL_Rect rect = {x-2, y-2, 4, 4};
+            SDL_RenderFillRect(renderer, &rect);
+        }
+    }
+
+    drawAxisText(renderer, max_x, max_y);
+}
+void Plotter::updatePlotTexture(void *render_engine) {
+    RenderEngine *engine = (RenderEngine*)render_engine;
+    SDL_Renderer *renderer = engine->getRendererHandle();
+    SDL_SetRenderTarget(renderer, plot_texture);
+
+    int *background_color = engine->getBackgroundColor();
+    SDL_SetRenderDrawColor(renderer, background_color[0], background_color[1], background_color[2], background_color[3]);
+    SDL_RenderClear(renderer);
+
+    drawPoints(renderer);
+    drawAxis(renderer);
+
+    SDL_SetRenderTarget(renderer, NULL);
+}
+
+void Plotter::render(void *render_engine) {
+    RenderEngine *engine = (RenderEngine*)render_engine;
+    if(plots.size() < 1) {
+        return;
+    }
+    if(plot_texture == nullptr) {
+        plot_texture = SDL_CreateTexture(engine->getRendererHandle(), SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, width, height);
+        updatePlotTexture(render_engine);
+        std::chrono::steady_clock::time_point current_time = std::chrono::steady_clock::now();
+        std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(current_time - previous_update);
+        if(time_span.count() * 1000 > update_frequency) {
+            updatePlotTexture(render_engine);
+            previous_update = current_time;
+        }
+    }
+    
+    SDL_Rect rect = {display_x, display_y, width, height};
+    SDL_RenderCopy(engine->getRendererHandle(), plot_texture, NULL, &rect);
+}
+
+void Plotter::setDynamic(bool dyn) {
+    dynamic = dyn;
+}
+
+void Plotter::setUpdateFrequency(double freq) {
+    update_frequency = freq;
+}
+
+void Plotter::setAxisColor(SDL_Color color) {
+    axis_color = color;
+}
+
+void Plotter::setXDisplayRound(int x) {
+    x_display_round = x;
+}
+
+void Plotter::setYDisplayRound(int y) {
+    y_display_round = y;
+}
+
+void Plotter::setXPadding(int pad) {
+    x_padding = pad;
+}
+
+void Plotter::setYPadding(int pad) {
+    y_padding = pad;
+}

@@ -4,14 +4,15 @@
 
 using namespace rend;
 
-RenderObject::RenderObject() {}
+RenderObject::RenderObject() {
+    draw_priority = 0;
+}
 RenderObject::~RenderObject() {}
 
 
 void RenderObject::render(void *render_engine) {
     return;
 }
-
 
 BallRenderer::~BallRenderer() {}
 BallRenderer::BallRenderer(double *x, double *y, double rad, unsigned char red, unsigned char green, unsigned char blue, int draw_priority) {

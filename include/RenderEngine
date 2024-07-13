@@ -1,2 +1,3 @@
 #include "../include/renderer.hpp"
 #include "../include/render_object.hpp"
+#include "../include/plotter.hpp"

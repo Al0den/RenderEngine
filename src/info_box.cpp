@@ -25,7 +25,7 @@ InfoBox::InfoBox(int num_row, int num_col) {
         }
     }
 
-    font = TTF_OpenFont("/Users/alois/Desktop/projects/render_engine/include/CourierPrime-Bold.ttf", 16);
+    font = TTF_OpenFont("/Users/alois/Desktop/projects/render_engine/include/fonts/CourierPrime-Bold.ttf", 16);
 
     if (font == nullptr) {
         printf("TTF_OpenFont: %s\n", TTF_GetError());

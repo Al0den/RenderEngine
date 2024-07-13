@@ -42,6 +42,7 @@ RenderEngine::RenderEngine(int width, int height, int config) {
 
     h = height;
     w = width;
+
     offset_x = new double;
     offset_y = new double;
     
@@ -54,6 +55,7 @@ RenderEngine::RenderEngine(int width, int height, int config) {
     renderLoop = false;
     paused = false;
     hide = false;
+    debug = config & REND_DEBUG;
  
     grid = config & REND_GRID;
 
@@ -65,6 +67,8 @@ RenderEngine::RenderEngine(int width, int height, int config) {
 
     customRenderFunction = nullptr;
     renderOverlapFunction = nullptr;
+    customSDLEventHandler = nullptr;
+    customInfoBoxFunction = nullptr;
 
     startRenderLoop();
 
@@ -73,10 +77,15 @@ RenderEngine::RenderEngine(int width, int height, int config) {
 }
 
 RenderEngine::~RenderEngine() {
+    lock.lock();
     renderLoop = false;
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
+    delete offset_x;
+    delete offset_y;
+    delete info_box;
+    lock.unlock();
 }
 
 void RenderEngine::renderFrame() {
@@ -108,6 +117,14 @@ void RenderEngine::posToLocal(double x, double y, int *local_x, int *local_y) {
 }
 void RenderEngine::setCustomOverlapFunction(void (override_func)(SDL_Renderer *renderer, SDL_Window *window)) {
     renderOverlapFunction = override_func;
+}
+
+void RenderEngine::setCustomSDLEventHandler(void (override_func)(SDL_Event *e)) {
+    customSDLEventHandler = override_func;
+}
+
+void RenderEngine::setCustomInfoBoxFunction(void (override_func)(InfoBox *info_box)) {
+    customInfoBoxFunction = override_func;
 }
 
 void RenderEngine::setBackgroundColor(int red, int green, int blue, int alpha) {
@@ -153,16 +170,22 @@ void RenderEngine::setZoomFactor(double zf) {
     zoom_factor = zf;
     lock.unlock();
 }
-
+ 
 double RenderEngine::getZoomFactor() {
     return zoom_factor;
 }
 
 bool RenderEngine::handleEvents() {
-    if (!renderLoop) return false;
+    if (!renderLoop) {
+        return false;
+    }
     while(SDL_PollEvent(&e) != 0) {
         if(e.type == SDL_QUIT) {
             renderLoop = false;
+        }
+
+        if(customSDLEventHandler != nullptr) {
+            customSDLEventHandler(&e);
         }
 
         if(e.type == SDL_KEYDOWN) {
@@ -207,11 +230,14 @@ void *RenderEngine::RenderLoop() {
         lock.lock();
         if (customRenderFunction != nullptr) {
             customRenderFunction(renderer, window);
-        } else{
+        } else {
             SDL_GetWindowSize(window, &w, &h);
             renderFrame();
             if(renderOverlapFunction != nullptr) {
                 renderOverlapFunction(renderer, window);
+            }
+            if(customInfoBoxFunction != nullptr) {
+                customInfoBoxFunction(info_box);
             }
             SDL_RenderPresent(renderer);
         }
@@ -219,6 +245,10 @@ void *RenderEngine::RenderLoop() {
         SDL_Delay(1000/fps);
     }
     return NULL;
+}
+
+void RenderEngine::setFPS(int fps) {
+    this->fps = fps;
 }
 
 void RenderEngine::renderAllObjects() {
@@ -229,7 +259,9 @@ void RenderEngine::renderAllObjects() {
         next_prio = INT_MAX;
         for(int i=0; i<n; i++) {
             if(objects[i] == nullptr) {
-                std::cerr << "Null pointer in objects" << std::endl;
+                if(debug) {
+                    std::cerr << "Null pointer in objects" << std::endl;
+                }
                 continue;
             }
             if (objects[i]->draw_priority == current_prio) {
@@ -285,3 +317,20 @@ bool RenderEngine::isHidingInfoBox() {
     return hide;
 }
 
+void RenderEngine::clearObjects() {
+    lock.lock();
+    objects.clear();
+    lock.unlock();
+}
+
+int RenderEngine::getHeight() {
+    return h;
+}
+
+int RenderEngine::getWidth() {
+    return w;
+}
+
+int *RenderEngine::getBackgroundColor() {
+    return background_color;
+}

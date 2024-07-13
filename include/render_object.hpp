@@ -20,6 +20,7 @@ namespace rend {
             
             virtual void render(void *render_engine) override;
 
+            int draw_priority;
         private:
             double *x;
             double *y;
@@ -29,7 +30,6 @@ namespace rend {
             unsigned char green;
             unsigned char blue;
 
-            int draw_priority;
     };
 
     class SpringRenderer : public RenderObject {
