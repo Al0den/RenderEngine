@@ -21,7 +21,7 @@ Plotter::Plotter(int x, int y, int width, int height) {
     y_display_round = 0;
         
     x_padding = 70;
-    y_padding = 10;
+    y_padding = 30;
 
     relative = false;
     dynamic = false;
@@ -60,6 +60,17 @@ void Plotter::plot(double *x, double *y, int num_values, SDL_Color color) {
     new_plot.num_values = num_values;
     new_plot.color = color;
     new_plot.link_points = true;
+    plots.push_back(new_plot);
+    return;
+}
+
+void Plotter::scatter(double *x, double *y, int num_values, SDL_Color color) {
+    plot_t new_plot;
+    new_plot.x = x;
+    new_plot.y = y;
+    new_plot.num_values = num_values;
+    new_plot.color = color;
+    new_plot.link_points = false;
     plots.push_back(new_plot);
     return;
 }
@@ -157,10 +168,10 @@ void Plotter::drawAxisText(SDL_Renderer *renderer, double max_x, double max_y) {
                 for(int i=0; i<surface->h; i++) {
                     heights[y + i] = true;
                 }
-                SDL_RenderCopy(renderer, texture, NULL, &rect);
-                SDL_FreeSurface(surface);
-                SDL_DestroyTexture(texture);
             }
+            SDL_RenderCopy(renderer, texture, NULL, &rect);
+            SDL_FreeSurface(surface);
+            SDL_DestroyTexture(texture);
 
             x = x_padding + (plots[i].x[j] / max_x) * (width - 2 * x_padding);
             y = height - y_padding + char_width;
@@ -190,10 +201,11 @@ void Plotter::drawAxisText(SDL_Renderer *renderer, double max_x, double max_y) {
                     widths[x + i] = true;
                 }
                 rect = {x - surface->w / 2, y, surface->w, surface->h};
-                SDL_RenderCopy(renderer, texture, NULL, &rect);
-                SDL_FreeSurface(surface);
-                SDL_DestroyTexture(texture);
             }
+
+            SDL_RenderCopy(renderer, texture, NULL, &rect);
+            SDL_FreeSurface(surface);
+            SDL_DestroyTexture(texture);
         }
     }
     delete[] heights;
@@ -269,6 +281,8 @@ void Plotter::render(void *render_engine) {
     if(plot_texture == nullptr) {
         plot_texture = SDL_CreateTexture(engine->getRendererHandle(), SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, width, height);
         updatePlotTexture(render_engine);
+    }
+    if(dynamic) {
         std::chrono::steady_clock::time_point current_time = std::chrono::steady_clock::now();
         std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(current_time - previous_update);
         if(time_span.count() * 1000 > update_frequency) {
@@ -276,7 +290,7 @@ void Plotter::render(void *render_engine) {
             previous_update = current_time;
         }
     }
-    
+
     SDL_Rect rect = {display_x, display_y, width, height};
     SDL_RenderCopy(engine->getRendererHandle(), plot_texture, NULL, &rect);
 }

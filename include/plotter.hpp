@@ -25,6 +25,7 @@ namespace rend {
             virtual void render(void *render_engine) override;
 
             void plot(double *x, double *y, int num_values, SDL_Color color);
+            void scatter(double *x, double *y, int num_values, SDL_Color color);
 
             void setDynamic(bool dyn);
             void setUpdateFrequency(double freq);
@@ -61,7 +62,7 @@ namespace rend {
 
             TTF_Font *font;
             SDL_Texture *plot_texture;
-                           
+
             void drawAxis(SDL_Renderer *renderer);
             void drawPoints(SDL_Renderer *renderer);
             void drawAxisText(SDL_Renderer *renderer, double max_x, double max_y);
