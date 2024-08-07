@@ -89,18 +89,12 @@ RenderEngine::~RenderEngine() {
 }
 
 void RenderEngine::renderFrame() {
-    int current_priority = 0;
-    int next_priority = INT_MAX - 2;
-
-    int drawn = 0;
-
     drawBackground();
     renderAllObjects();
 
     if(info_box != nullptr && !hide) {
         info_box->render(renderer, 15, 15);
     }
-
 }
 
 InfoBox* RenderEngine::getInfoBox() {
