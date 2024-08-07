@@ -60,7 +60,7 @@ int main() {
         if(theta > 2 * M_PI) {
             theta -= 2 * M_PI;
         }
-        std:cout << x[0] << " " << y[0] << std::endl;
+        std::cout << x[0] << " " << y[0] << std::endl;
 
         SDL_Delay(10);
     }
