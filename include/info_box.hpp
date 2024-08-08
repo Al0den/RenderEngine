@@ -2,16 +2,18 @@
 
 #include <cstdlib>
 #include <string>
+#include <mutex>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+
 
 using namespace std;
 
 namespace rend {
     class InfoBox {
         public:
-            InfoBox(int num_row, int num_col);
+            InfoBox(int num_row, int num_col, std::mutex *rend_lock);
             ~InfoBox();
 
             int addRow();
@@ -28,8 +30,8 @@ namespace rend {
             void setNameValue(int col, int row, string name, string value);
 
             void render(SDL_Renderer *renderer, int x, int y);
-    
-
+            
+            std::mutex *lock;
         private:
             TTF_Font *font;
 

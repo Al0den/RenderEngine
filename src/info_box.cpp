@@ -5,7 +5,7 @@
 
 using namespace rend;
 
-InfoBox::InfoBox(int num_row, int num_col) {
+InfoBox::InfoBox(int num_row, int num_col, std::mutex *rend_lock) {
     num_cols = num_col;
     rows_per_col = num_row;
     row_width = 0;
@@ -31,6 +31,8 @@ InfoBox::InfoBox(int num_row, int num_col) {
         printf("TTF_OpenFont: %s\n", TTF_GetError());
         exit(1);
     }
+
+    lock = rend_lock;
 }
 
 InfoBox::~InfoBox() {
@@ -49,6 +51,7 @@ InfoBox::~InfoBox() {
 }
 
 int InfoBox::addRow() {
+    lock->lock();
     if(rows_per_col == 0 || num_cols == 0) {
         return -1;
     }
@@ -73,11 +76,13 @@ int InfoBox::addRow() {
 
     info_box_names = new_names;
     info_box_values = new_values;
-
+    
+    lock->unlock();
     return rows_per_col;
 }
 
 int InfoBox::addCol() {
+    lock->lock();
     if(rows_per_col == 0 || num_cols == 0) {
         return -1;
     }
@@ -104,10 +109,12 @@ int InfoBox::addCol() {
     info_box_names = new_names;
     info_box_values = new_values;
 
+    lock->unlock();
     return num_cols;
 }
 
 int InfoBox::removeRow() {
+    lock->lock();
     if (rows_per_col == 0 || num_cols == 0) {
         return -1;
     }
@@ -130,7 +137,8 @@ int InfoBox::removeRow() {
 
     info_box_names = new_names;
     info_box_values = new_values;
-
+    
+    lock->unlock();
     return rows_per_col;
 }
 
@@ -150,6 +158,7 @@ void InfoBox::setRowCol(int row, int col) {
 }
 
 int InfoBox::removeCol() {
+    lock->lock();
     if(rows_per_col == 0 || num_cols == 0) {
         return -1;
     }
@@ -172,6 +181,8 @@ int InfoBox::removeCol() {
 
     info_box_names = new_names;
     info_box_values = new_values;
+
+    lock->unlock();
 
     return num_cols;
 }

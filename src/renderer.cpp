@@ -60,7 +60,7 @@ RenderEngine::RenderEngine(int width, int height, int config) {
     grid = config & REND_GRID;
 
     if(config & REND_INFOBOX) {
-        info_box = new InfoBox(1, 1);
+        info_box = new InfoBox(1, 1, &lock);
     } else {
         info_box = nullptr;
     }
