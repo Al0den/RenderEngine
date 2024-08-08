@@ -45,12 +45,17 @@ Plotter::Plotter(int x, int y, int width, int height) {
 
     previous_update = std::chrono::steady_clock::now();
     update_frequency = 1000; // in milliseconds
+                             
+    heights = new bool[4000];
+    widths = new bool[4000];
 }
 
 Plotter::~Plotter() {
     if (plot_texture != nullptr) {
         SDL_DestroyTexture(plot_texture);
     }
+    delete[] heights;
+    delete[] widths;
 }
 
 void Plotter::plot(double *x, double *y, int num_values, SDL_Color color) {
@@ -129,13 +134,8 @@ double round_nth_decimal(double value, int n) {
 };
 
 void Plotter::drawAxisText(SDL_Renderer *renderer, double max_x, double max_y) {
-    bool *heights = new bool[4000];
-    bool *widths = new bool[4000];
-
-    for(int i=0; i<4000; i++) {
-        heights[i] = false;
-        widths[i] = false;
-    }
+    memset(heights, 0, 4000 * sizeof(bool));
+    memset(widths, 0, 4000 * sizeof(bool));
 
     for(int i=0; i<plots.size(); i++) {
         for(int j=0; j<plots[i].num_values; j++) {
@@ -158,6 +158,7 @@ void Plotter::drawAxisText(SDL_Renderer *renderer, double max_x, double max_y) {
             SDL_Rect rect = {x - surface->w, y - surface->h / 2, surface->w, surface->h};
             // Check that no text is drawn on top of another text
             bool overlap = false;
+            std::cout << y << std::endl;
             for(int i=0; i<surface->h; i++) {
                 if(heights[y + i]) {
                     overlap = true;
@@ -165,11 +166,14 @@ void Plotter::drawAxisText(SDL_Renderer *renderer, double max_x, double max_y) {
                 }
             }
             if(!overlap) {
-                for(int i=0; i<surface->h; i++) {
+                for(int i=-(int)(char_width/2); i<surface->h + (int)(char_width/2); i++) {
                     heights[y + i] = true;
                 }
+                rect = {x - surface->w, y - surface->h / 2, surface->w, surface->h};
+                SDL_RenderCopy(renderer, texture, NULL, &rect);
+                SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+                SDL_RenderDrawLine(renderer, x_padding, y, x_padding - 5, y);
             }
-            SDL_RenderCopy(renderer, texture, NULL, &rect);
             SDL_FreeSurface(surface);
             SDL_DestroyTexture(texture);
 
@@ -197,19 +201,18 @@ void Plotter::drawAxisText(SDL_Renderer *renderer, double max_x, double max_y) {
                 }
             }
             if (!overlap) {
-                for (int i=0; i<surface->w + 10; i++) {
+                for (int i=-(int)(char_width/2); i<surface->w + (int)(char_width/2); i++) {
                     widths[x + i] = true;
                 }
                 rect = {x - surface->w / 2, y, surface->w, surface->h};
+                SDL_RenderCopy(renderer, texture, NULL, &rect);
+                SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+                SDL_RenderDrawLine(renderer, x, height - y_padding, x, height - y_padding + 5);
             }
-
-            SDL_RenderCopy(renderer, texture, NULL, &rect);
             SDL_FreeSurface(surface);
             SDL_DestroyTexture(texture);
         }
     }
-    delete[] heights;
-    delete[] widths;
 }
 
 void Plotter::drawPoints(SDL_Renderer *renderer) {
@@ -245,7 +248,7 @@ void Plotter::drawPoints(SDL_Renderer *renderer) {
         for (int j=0; j<current_plot.num_values; j++) {
             int x = initial_x + (current_plot.x[j] - min_x) / (max_x - min_x) * (width - 2 * x_padding);
             int y = initial_y - (current_plot.y[j] - min_y) / (max_y - min_y) * (height - 2 * y_padding);
-            if(j != 0) {
+            if(j > 0) {
                 SDL_RenderDrawLine(renderer, prev_x, prev_y, x, y);
             }
             prev_x = x;

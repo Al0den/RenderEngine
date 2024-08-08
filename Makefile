@@ -1,6 +1,6 @@
 CXX=g++
 CXXFLAGS = -std=c++17
-LDFLAGS = -lrenderer -lSDL2 -lSDL2_ttf
+LDFLAGS = -lSDL2 -lSDL2_ttf
 
 TARGET = ./lib/librenderer.a
 
@@ -15,4 +15,4 @@ clean:
 	rm -rf $(OBJS) $(TARGET)
 
 rotating_ball: $(OBJS)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) examples/rotating_ball.cpp -o ./build/rotating_ball.out
+	$(CXX) $(CXXFLAGS) $(OBJS) examples/rotating_balls.cpp $(LDFLAGS) -o ./build/rotating_ball.out
