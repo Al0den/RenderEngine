@@ -20,7 +20,7 @@ namespace rend {
             
             virtual void render(void *render_engine) override;
 
-            int draw_priority;
+           int draw_priority;
         private:
             double *x;
             double *y;

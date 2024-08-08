@@ -250,6 +250,7 @@ void RenderEngine::renderAllObjects() {
     int current_prio = 0;
     int next_prio = 0;
     while(next_prio < INT_MAX) {
+        current_prio = next_prio;
         next_prio = INT_MAX;
         for(int i=0; i<n; i++) {
             if(objects[i] == nullptr) {
@@ -260,11 +261,10 @@ void RenderEngine::renderAllObjects() {
             }
             if (objects[i]->draw_priority == current_prio) {
                 objects[i]->render(static_cast<void*>(this));
-            } else if(objects[i]->draw_priority < next_prio) {
+            } else if(objects[i]->draw_priority < next_prio && objects[i]->draw_priority > current_prio) {
                 next_prio = objects[i]->draw_priority;
             }
         }
-        current_prio++;
         if(next_prio == INT_MAX) {
             break;
         }
