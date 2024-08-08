@@ -1,11 +1,12 @@
 #include "../include/info_box.hpp"
+#include "../include/renderer.hpp"
 
 #include <SDL2/SDL_ttf.h>
 #include <cstdlib>
 
 using namespace rend;
 
-InfoBox::InfoBox(int num_row, int num_col, std::mutex *rend_lock) {
+InfoBox::InfoBox(int num_row, int num_col) {
     num_cols = num_col;
     rows_per_col = num_row;
     row_width = 0;
@@ -32,7 +33,7 @@ InfoBox::InfoBox(int num_row, int num_col, std::mutex *rend_lock) {
         exit(1);
     }
 
-    lock = rend_lock;
+    lock = &(rend::RenderEngine::lock);
 }
 
 InfoBox::~InfoBox() {

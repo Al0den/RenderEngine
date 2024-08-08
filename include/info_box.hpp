@@ -13,7 +13,7 @@ using namespace std;
 namespace rend {
     class InfoBox {
         public:
-            InfoBox(int num_row, int num_col, std::mutex *rend_lock);
+            InfoBox(int num_row, int num_col);
             ~InfoBox();
 
             int addRow();
@@ -30,7 +30,7 @@ namespace rend {
             void setNameValue(int col, int row, string name, string value);
 
             void render(SDL_Renderer *renderer, int x, int y);
-            
+
             std::mutex *lock;
         private:
             TTF_Font *font;

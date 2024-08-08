@@ -15,6 +15,8 @@
 namespace rend {
     class RenderEngine {
         public:
+            static std::mutex lock;
+
             RenderEngine(int width, int height, int config);
             ~RenderEngine();
 
@@ -56,7 +58,7 @@ namespace rend {
             void toggleInfoBox();
 
             void clearObjects();
-            std::mutex lock;
+
         private:
 
             SDL_Window *window;

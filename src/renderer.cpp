@@ -6,6 +6,8 @@
 #include <SDL_render.h>
 #include <iostream>
 
+std::mutex rend::RenderEngine::lock = std::mutex();
+
 using namespace rend;
 
 RenderEngine::RenderEngine(int width, int height, int config) {
@@ -60,7 +62,7 @@ RenderEngine::RenderEngine(int width, int height, int config) {
     grid = config & REND_GRID;
 
     if(config & REND_INFOBOX) {
-        info_box = new InfoBox(1, 1, &lock);
+        info_box = new InfoBox(1, 1);
     } else {
         info_box = nullptr;
     }
