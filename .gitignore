@@ -4,3 +4,4 @@ buid
 *.o
 *.out
 examples
+Makefile
