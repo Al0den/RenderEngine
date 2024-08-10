@@ -8,11 +8,10 @@
 
 namespace rend {
     typedef struct Plot {
-        double *x;
-        double *y;
-        int num_values;
+        std::vector<double> x;
+        std::vector<double> y;
+
         SDL_Color color;
-        
         bool link_points;
     } plot_t;
 
@@ -24,8 +23,8 @@ namespace rend {
 
             virtual void render(void *render_engine) override;
 
-            void plot(double *x, double *y, int num_values, SDL_Color color);
-            void scatter(double *x, double *y, int num_values, SDL_Color color);
+            int plot(double *x, double *y, int num_values, SDL_Color color);
+            int scatter(double *x, double *y, int num_values, SDL_Color color);
 
             void setDynamic(bool dyn);
             void setUpdateFrequency(double freq);
@@ -35,8 +34,10 @@ namespace rend {
             void setXPadding(int pad);
             void setYPadding(int pad);
 
-        private:
+            void addValue(int plot_id, double x, double y);
+            void removePlot(int plot_id);
 
+        private:
             std::vector<plot_t> plots;
 
             int x_display_round;

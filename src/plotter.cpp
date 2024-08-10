@@ -58,26 +58,32 @@ Plotter::~Plotter() {
     delete[] widths;
 }
 
-void Plotter::plot(double *x, double *y, int num_values, SDL_Color color) {
+int Plotter::plot(double *x, double *y, int num_values, SDL_Color color) {
     plot_t new_plot;
-    new_plot.x = x;
-    new_plot.y = y;
-    new_plot.num_values = num_values;
+    new_plot.x = std::vector<double>();
+    new_plot.y = std::vector<double>();
+    for(int i=0; i<num_values; i++) {
+        new_plot.x.push_back(x[i]);
+        new_plot.y.push_back(y[i]);
+    }
     new_plot.color = color;
     new_plot.link_points = true;
     plots.push_back(new_plot);
-    return;
+    return plots.size() - 1;
 }
 
-void Plotter::scatter(double *x, double *y, int num_values, SDL_Color color) {
+int Plotter::scatter(double *x, double *y, int num_values, SDL_Color color) {
     plot_t new_plot;
-    new_plot.x = x;
-    new_plot.y = y;
-    new_plot.num_values = num_values;
+    new_plot.x = std::vector<double>();
+    new_plot.y = std::vector<double>();
+    for(int i=0; i<num_values; i++) {
+        new_plot.x.push_back(x[i]);
+        new_plot.y.push_back(y[i]);
+    }
     new_plot.color = color;
     new_plot.link_points = false;
     plots.push_back(new_plot);
-    return;
+    return plots.size() - 1;
 }
 
 void Plotter::drawAxis(SDL_Renderer *renderer) {
@@ -138,7 +144,7 @@ void Plotter::drawAxisText(SDL_Renderer *renderer, double max_x, double max_y) {
     memset(widths, 0, 4000 * sizeof(bool));
 
     for(int i=0; i<plots.size(); i++) {
-        for(int j=0; j<plots[i].num_values - 1; j++) {
+        for(int j=0; j<plots[i].x.size() - 1; j++) {
             int x = x_padding - char_width;
             int y = height - y_padding - (plots[i].y[j] / max_y) * (height - 2 * y_padding);
             std::string text_before_cut = std::to_string(round_nth_decimal(plots[i].y[j], y_display_round));
@@ -219,7 +225,7 @@ void Plotter::drawPoints(SDL_Renderer *renderer) {
     double max_x, min_x = 0;
 
     for (int i=0; i<plots.size(); i++) {
-        for(int j=0; j<plots[i].num_values - 1; j++) {
+        for(int j=0; j<plots[i].x.size() - 1; j++) {
             if(plots[i].x[j] > max_x) {
                 max_x = plots[i].x[j];
             }
@@ -244,7 +250,7 @@ void Plotter::drawPoints(SDL_Renderer *renderer) {
     for(int i=0; i<plots.size(); i++) {
         plot_t current_plot = plots[i];
         SDL_SetRenderDrawColor(renderer, current_plot.color.r, current_plot.color.g, current_plot.color.b, 255);
-        for (int j=0; j<current_plot.num_values - 1; j++) {
+        for (int j=0; j<current_plot.y.size() - 1; j++) {
             int x = initial_x + (current_plot.x[j] - min_x) / (max_x - min_x) * (width - 2 * x_padding);
             int y = initial_y - (current_plot.y[j] - min_y) / (max_y - min_y) * (height - 2 * y_padding);
             if(j > 0) {
@@ -296,6 +302,19 @@ void Plotter::render(void *render_engine) {
 
     SDL_SetTextureBlendMode(plot_texture, SDL_BLENDMODE_BLEND);
     SDL_RenderCopy(engine->getRendererHandle(), plot_texture, NULL, &rect);
+}
+
+void Plotter::addValue(int plot_id, double x, double y) {
+    RenderEngine::lock.lock();
+    plots[plot_id].x.push_back(x);
+    plots[plot_id].y.push_back(y);
+    RenderEngine::lock.unlock();
+}
+
+void Plotter::removePlot(int plot_id) {
+    RenderEngine::lock.lock();
+    plots.erase(plots.begin() + plot_id);
+    RenderEngine::lock.unlock();
 }
 
 void Plotter::setDynamic(bool dyn) {
