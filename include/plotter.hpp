@@ -26,7 +26,6 @@ namespace rend {
             int plot(double *x, double *y, int num_values, SDL_Color color);
             int scatter(double *x, double *y, int num_values, SDL_Color color);
 
-            void setDynamic(bool dyn);
             void setUpdateFrequency(double freq);
             void setAxisColor(SDL_Color color);
             void setXDisplayRound(int x);
@@ -40,6 +39,8 @@ namespace rend {
         private:
             std::vector<plot_t> plots;
 
+
+
             int x_display_round;
             int y_display_round;
             
@@ -50,7 +51,7 @@ namespace rend {
             int height;
 
             bool relative; // true for relative, false for fixed
-            bool dynamic;
+            bool update;
 
             std::chrono::steady_clock::time_point previous_update;
             double update_frequency;

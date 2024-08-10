@@ -24,7 +24,6 @@ Plotter::Plotter(int x, int y, int width, int height) : RenderObject() {
     y_padding = 30;
 
     relative = false;
-    dynamic = false;
 
     font = TTF_OpenFont("/Users/alois/Desktop/projects/render_engine/include/fonts/CourierPrime-Bold.ttf", 16);
     if (font == nullptr) {
@@ -69,6 +68,7 @@ int Plotter::plot(double *x, double *y, int num_values, SDL_Color color) {
     new_plot.color = color;
     new_plot.link_points = true;
     plots.push_back(new_plot);
+    update = true;
     return plots.size() - 1;
 }
 
@@ -83,6 +83,7 @@ int Plotter::scatter(double *x, double *y, int num_values, SDL_Color color) {
     new_plot.color = color;
     new_plot.link_points = false;
     plots.push_back(new_plot);
+    update = true;
     return plots.size() - 1;
 }
 
@@ -291,7 +292,7 @@ void Plotter::render(void *render_engine) {
         plot_texture = SDL_CreateTexture(engine->getRendererHandle(), SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, width, height);
         updatePlotTexture(render_engine);
     }
-    if(dynamic) {
+    if(update) {
         std::chrono::steady_clock::time_point current_time = std::chrono::steady_clock::now();
         std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(current_time - previous_update);
         if(time_span.count() * 1000 > update_frequency) {
@@ -311,16 +312,14 @@ void Plotter::addValue(int plot_id, double x, double y) {
     plots[plot_id].x.push_back(x);
     plots[plot_id].y.push_back(y);
     RenderEngine::lock.unlock();
+    update = true;
 }
 
 void Plotter::removePlot(int plot_id) {
     RenderEngine::lock.lock();
     plots.erase(plots.begin() + plot_id);
     RenderEngine::lock.unlock();
-}
-
-void Plotter::setDynamic(bool dyn) {
-    dynamic = dyn;
+    update = true;
 }
 
 void Plotter::setUpdateFrequency(double freq) {
