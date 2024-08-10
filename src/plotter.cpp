@@ -66,7 +66,7 @@ int Plotter::plot(double *x, double *y, int num_values, SDL_Color color) {
     new_plot.link_points = true;
     plots.push_back(new_plot);
     update = true;
-    return plots.size() - 1;
+    return (int)(plots.size() - 1);
 }
 
 int Plotter::scatter(double *x, double *y, int num_values, SDL_Color color) {
@@ -81,7 +81,7 @@ int Plotter::scatter(double *x, double *y, int num_values, SDL_Color color) {
     new_plot.link_points = false;
     plots.push_back(new_plot);
     update = true;
-    return plots.size() - 1;
+    return (int)(plots.size() - 1);
 }
 
 void Plotter::drawAxis(SDL_Renderer *renderer) {
@@ -141,8 +141,8 @@ void Plotter::drawAxisText(SDL_Renderer *renderer, double max_x, double max_y, d
     memset(heights, 0, 4000 * sizeof(bool));
     memset(widths, 0, 4000 * sizeof(bool));
 
-    for(int i=0; i<plots.size(); i++) {
-        for(int j=0; j<plots[i].x.size(); j++) {
+    for(int i=0; i<(int)plots.size(); i++) {
+        for(int j=0; j<(int)plots[i].x.size(); j++) {
             int x = x_padding - char_width;
             int y = height - y_padding - ((plots[i].y[j] - min_y) / (max_y - min_y)) * (height - 2 * y_padding);
             std::string text_before_cut = std::to_string(round_nth_decimal(plots[i].y[j], y_display_round));
@@ -224,8 +224,8 @@ void Plotter::drawPoints(SDL_Renderer *renderer) {
     double min_x = INFINITY;
     double min_y = INFINITY;
 
-    for (int i=0; i<plots.size(); i++) {
-        for(int j=0; j<plots[i].x.size(); j++) {
+    for (int i=0; i<(int)plots.size(); i++) {
+        for(int j=0; j<(int)plots[i].x.size(); j++) {
             if(plots[i].x[j] > max_x) {
                 max_x = plots[i].x[j];
             }
@@ -240,6 +240,8 @@ void Plotter::drawPoints(SDL_Renderer *renderer) {
             }
         }
     }
+    min_x *= 0.9;
+    min_x *= 0.9;
     max_x *= 1.1;
     max_y *= 1.1;
     int initial_x = x_padding;
@@ -247,10 +249,10 @@ void Plotter::drawPoints(SDL_Renderer *renderer) {
 
     int prev_x, prev_y;
 
-    for(int i=0; i<plots.size(); i++) {
+    for(int i=0; i<(int)plots.size(); i++) {
         plot_t current_plot = plots[i];
         SDL_SetRenderDrawColor(renderer, current_plot.color.r, current_plot.color.g, current_plot.color.b, 255);
-        for (int j=0; j<current_plot.y.size(); j++) {
+        for (int j=0; j<(int)current_plot.y.size(); j++) {
             int x = initial_x + (current_plot.x[j] - min_x) / (max_x - min_x) * (width - 2 * x_padding);
             int y = initial_y - (current_plot.y[j] - min_y) / (max_y - min_y) * (height - 2 * y_padding);
             if(j > 0 && current_plot.link_points) { 
@@ -282,7 +284,7 @@ void Plotter::updatePlotTexture(void *render_engine) {
 
 void Plotter::render(void *render_engine) {
     RenderEngine *engine = (RenderEngine*)render_engine;
-    if(plots.size() < 1) {
+    if((int)plots.size() < 1) {
         return;
     }
     if(plot_texture == nullptr) {
