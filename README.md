@@ -9,10 +9,9 @@ By default, this renderer already runs in a separate thread.
 
 This requires the use of the C++14 standard (For the use of vectors)
 
-Clone this folder to a third-party folder, and you can then simply include it inside ur main project.
+Clone this folder to a third-party folder, and you can then simply include it inside your main project.
 Note that everything is under the namespace `rend`
 
-Another option is to recompile the whole code, and simply include it (Still linking SDL2 and SDL\_ttf though) 
 
 # Examples
 
