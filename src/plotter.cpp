@@ -144,7 +144,7 @@ void Plotter::drawAxisText(SDL_Renderer *renderer, double max_x, double max_y) {
     memset(widths, 0, 4000 * sizeof(bool));
 
     for(int i=0; i<plots.size(); i++) {
-        for(int j=0; j<plots[i].x.size() - 1; j++) {
+        for(int j=0; j<plots[i].x.size(); j++) {
             int x = x_padding - char_width;
             int y = height - y_padding - (plots[i].y[j] / max_y) * (height - 2 * y_padding);
             std::string text_before_cut = std::to_string(round_nth_decimal(plots[i].y[j], y_display_round));
@@ -225,7 +225,7 @@ void Plotter::drawPoints(SDL_Renderer *renderer) {
     double max_x, min_x = 0;
 
     for (int i=0; i<plots.size(); i++) {
-        for(int j=0; j<plots[i].x.size() - 1; j++) {
+        for(int j=0; j<plots[i].x.size(); j++) {
             if(plots[i].x[j] > max_x) {
                 max_x = plots[i].x[j];
             }
@@ -250,7 +250,7 @@ void Plotter::drawPoints(SDL_Renderer *renderer) {
     for(int i=0; i<plots.size(); i++) {
         plot_t current_plot = plots[i];
         SDL_SetRenderDrawColor(renderer, current_plot.color.r, current_plot.color.g, current_plot.color.b, 255);
-        for (int j=0; j<current_plot.y.size() - 1; j++) {
+        for (int j=0; j<current_plot.y.size(); j++) {
             int x = initial_x + (current_plot.x[j] - min_x) / (max_x - min_x) * (width - 2 * x_padding);
             int y = initial_y - (current_plot.y[j] - min_y) / (max_y - min_y) * (height - 2 * y_padding);
             if(j > 0) {
