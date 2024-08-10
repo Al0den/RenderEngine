@@ -265,8 +265,6 @@ void Plotter::updatePlotTexture(void *render_engine) {
     SDL_Renderer *renderer = engine->getRendererHandle();
     SDL_SetRenderTarget(renderer, plot_texture);
 
-
-    int *background_color = engine->getBackgroundColor();
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
     SDL_RenderClear(renderer);
 

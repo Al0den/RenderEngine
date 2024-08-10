@@ -13,8 +13,8 @@ namespace rend {
             int getDrawPriority();
             void setDrawPriority(int priority);
 
-            int draw_priority;
         private:
+            int draw_priority;
     };
 
     class BallRenderer : public RenderObject {
