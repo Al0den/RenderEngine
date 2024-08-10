@@ -5,7 +5,7 @@
 
 using namespace rend;
 
-Plotter::Plotter(int x, int y, int width, int height) {
+Plotter::Plotter(int x, int y, int width, int height) : RenderObject() {
     plots = std::vector<plot_t>();
 
     axis_color.r = 255;
@@ -265,8 +265,9 @@ void Plotter::updatePlotTexture(void *render_engine) {
     SDL_Renderer *renderer = engine->getRendererHandle();
     SDL_SetRenderTarget(renderer, plot_texture);
 
+
     int *background_color = engine->getBackgroundColor();
-    SDL_SetRenderDrawColor(renderer, background_color[0], background_color[1], background_color[2], background_color[3]);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
     SDL_RenderClear(renderer);
 
     drawPoints(renderer);
@@ -294,6 +295,8 @@ void Plotter::render(void *render_engine) {
     }
 
     SDL_Rect rect = {display_x, display_y, width, height};
+
+    SDL_SetTextureBlendMode(plot_texture, SDL_BLENDMODE_BLEND);
     SDL_RenderCopy(engine->getRendererHandle(), plot_texture, NULL, &rect);
 }
 

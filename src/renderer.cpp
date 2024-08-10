@@ -5,6 +5,7 @@
 
 #include <SDL_render.h>
 #include <iostream>
+#include <assert.h>
 
 std::mutex rend::RenderEngine::lock = std::mutex();
 
@@ -221,6 +222,7 @@ void *RenderEngine::RenderLoop() {
 }
 
 void RenderEngine::setFPS(int fps) {
+    assert(fps > 0);
     this->fps = fps;
 }
 
@@ -238,10 +240,10 @@ void RenderEngine::renderAllObjects() {
                 }
                 continue;
             }
-            if (objects[i]->draw_priority == current_prio) {
+            if (objects[i]->getDrawPriority() == current_prio) {
                 objects[i]->render(static_cast<void*>(this));
-            } else if(objects[i]->draw_priority < next_prio && objects[i]->draw_priority > current_prio) {
-                next_prio = objects[i]->draw_priority;
+            } else if(objects[i]->getDrawPriority() < next_prio && objects[i]->getDrawPriority() > current_prio) {
+                next_prio = objects[i]->getDrawPriority();
             }
         }
         if(next_prio == INT_MAX) {

@@ -35,9 +35,8 @@ namespace rend {
             void setXPadding(int pad);
             void setYPadding(int pad);
 
-            int draw_priority;
-
         private:
+
             std::vector<plot_t> plots;
 
             int x_display_round;

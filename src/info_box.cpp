@@ -8,7 +8,7 @@
 
 using namespace rend;
 
-InfoBox::InfoBox(int num_row, int num_col, int x, int y) {
+InfoBox::InfoBox(int num_row, int num_col, int x, int y) : RenderObject() {
     display_x = x;
     display_y = y;
 
@@ -306,3 +306,4 @@ void InfoBox::render(void *render_engine) {
         x += (max_width_name + 2 + max_width_value + padding * 2) * char_width + 1;
     }
 }
+

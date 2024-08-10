@@ -6,7 +6,9 @@
 
 using namespace rend;
 
-RenderObject::RenderObject() {}
+RenderObject::RenderObject() {
+    draw_priority = 0;
+}
 
 RenderObject::~RenderObject() {}
 
@@ -15,14 +17,24 @@ void RenderObject::render(void *render_engine) {
     return;
 }
 
-BallRenderer::BallRenderer(double *x, double *y, double rad, unsigned char red, unsigned char green, unsigned char blue, int draw_priority) {
+int RenderObject::getDrawPriority() {
+    return draw_priority;
+}
+
+void RenderObject::setDrawPriority(int priority) {
+    RenderEngine::lock.lock();
+    draw_priority = priority;
+    RenderEngine::lock.unlock();
+}
+
+BallRenderer::BallRenderer(double *x, double *y, double rad, unsigned char red, unsigned char green, unsigned char blue, int draw_priority) : RenderObject() {
     this->x = x;
     this->y = y;
     this->rad = rad;
     this->red =red;
     this->blue = blue;
     this->green = green;
-    this->draw_priority = draw_priority;
+    setDrawPriority(draw_priority);
 }
 
 BallRenderer::~BallRenderer() {}
@@ -47,7 +59,7 @@ void BallRenderer::render(void *render_engine) {
     }
 }
 
-SpringRenderer::SpringRenderer(double *x1, double *y1, double *x2, double *y2, double width, unsigned char red, unsigned char green, unsigned char blue, int draw_priority) {
+SpringRenderer::SpringRenderer(double *x1, double *y1, double *x2, double *y2, double width, unsigned char red, unsigned char green, unsigned char blue, int draw_priority) : RenderObject() {
     this->x1 = x1;
     this->y1 = y1;
     this->x2 = x2;
@@ -56,7 +68,7 @@ SpringRenderer::SpringRenderer(double *x1, double *y1, double *x2, double *y2, d
     this->red = red;
     this->green = green;
     this->blue = blue;
-    this->draw_priority = draw_priority;
+    setDrawPriority(draw_priority);
 }
 
 SpringRenderer::~SpringRenderer() {}

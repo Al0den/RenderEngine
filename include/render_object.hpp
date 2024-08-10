@@ -10,7 +10,11 @@ namespace rend {
             
             virtual void render(void *render_engine) = 0;
 
+            int getDrawPriority();
+            void setDrawPriority(int priority);
+
             int draw_priority;
+        private:
     };
 
     class BallRenderer : public RenderObject {
@@ -20,8 +24,8 @@ namespace rend {
             
             virtual void render(void *render_engine) override;
 
-           int draw_priority;
         private:
+
             double *x;
             double *y;
             double rad;
@@ -39,7 +43,6 @@ namespace rend {
 
             virtual void render(void *render_engine) override;
 
-            int draw_priority;
         private:
             double *x1;
             double *y1;
