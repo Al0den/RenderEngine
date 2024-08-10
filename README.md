@@ -9,7 +9,8 @@ By default, this renderer already runs in a separate thread.
 
 This requires the use of the C++14 standard (For the use of vectors)
 
-Simply clone the reposity, and run `make -B`. Then, in any project, include the `include/RenderEngine"` file. When linking, you will need to link the library built inside `lib`, SDL2 and SDL\_ttf
+Clone this folder to a third-party folder, and you can then simply include it inside ur main project.
+Note that everything is under the namespace `rend`
 
 Another option is to recompile the whole code, and simply include it (Still linking SDL2 and SDL\_ttf though) 
 
