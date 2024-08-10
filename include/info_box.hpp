@@ -30,11 +30,11 @@ namespace rend {
 
             void setNameValue(int col, int row, string name, string value);
 
-            virtual void render(void *renderer) override;
+            virtual void render(void *render_engine) override;
 
             std::mutex *lock;
         private:
-            int x, y;
+            int display_x, display_y;
 
             TTF_Font *font;
 

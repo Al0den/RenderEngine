@@ -2,6 +2,8 @@
 #include "../include/renderer.hpp"
 #include <SDL_render.h>
 
+#include <iostream>
+
 using namespace rend;
 
 RenderObject::RenderObject() {}
@@ -9,6 +11,7 @@ RenderObject::RenderObject() {}
 RenderObject::~RenderObject() {}
 
 void RenderObject::render(void *render_engine) {
+    std::cout << "Warning: Tried to render a RenderObject" << std::endl;
     return;
 }
 

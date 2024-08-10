@@ -9,8 +9,8 @@
 using namespace rend;
 
 InfoBox::InfoBox(int num_row, int num_col, int x, int y) {
-    this->x = x;
-    this->y = y;
+    display_x = x;
+    display_y = y;
 
     num_cols = num_col;
     rows_per_col = num_row;
@@ -239,8 +239,8 @@ int InfoBox::determineCharWidth() {
     return width;
 }
 
-void InfoBox::render(void *renderer_void) {
-    RenderEngine *engine = (RenderEngine*)renderer_void; 
+void InfoBox::render(void *render_engine) {
+    RenderEngine *engine = (RenderEngine*)render_engine; 
     SDL_Renderer *renderer = engine->getRendererHandle();
     int max_width_name = 0;
     int max_width_value = 0;
@@ -263,20 +263,23 @@ void InfoBox::render(void *renderer_void) {
     int total_height = (char_height + padding) * rows_per_col;
 
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); 
-    SDL_Rect rect = {x, y, total_width, total_height};
+    SDL_Rect rect = {display_x, display_y, total_width, total_height};
     SDL_RenderFillRect(renderer, &rect);
 
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     int border_width = 1;
 
-    SDL_Rect top_border = {x, y, total_width, border_width};
+    SDL_Rect top_border = {display_x, display_y, total_width, border_width};
     SDL_RenderFillRect(renderer, &top_border);
-    SDL_Rect bottom_border = {x, y + total_height - border_width, total_width, border_width};
+    SDL_Rect bottom_border = {display_x, display_y + total_height - border_width, total_width, border_width};
     SDL_RenderFillRect(renderer, &bottom_border);
-    SDL_Rect left_border = {x, y, border_width, total_height};
+    SDL_Rect left_border = {display_x, display_y, border_width, total_height};
     SDL_RenderFillRect(renderer, &left_border);
-    SDL_Rect right_border = {x + total_width - border_width, y, border_width, total_height};
+    SDL_Rect right_border = {display_x + total_width - border_width, display_y, border_width, total_height};
     SDL_RenderFillRect(renderer, &right_border);
+
+    int x = display_x;
+    int y = display_y;
 
     x += padding * char_width;
 
