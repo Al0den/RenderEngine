@@ -7,13 +7,14 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 
+#include "../include/render_object.hpp"
 
 using namespace std;
 
 namespace rend {
-    class InfoBox {
+    class InfoBox : public RenderObject {
         public:
-            InfoBox(int num_row, int num_col);
+            InfoBox(int num_row, int num_col, int x, int y);
             ~InfoBox();
 
             int addRow();
@@ -29,10 +30,12 @@ namespace rend {
 
             void setNameValue(int col, int row, string name, string value);
 
-            void render(SDL_Renderer *renderer, int x, int y);
+            virtual void render(void *renderer) override;
 
             std::mutex *lock;
         private:
+            int x, y;
+
             TTF_Font *font;
 
             string **info_box_names;

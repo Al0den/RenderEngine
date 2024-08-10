@@ -3,10 +3,15 @@
 
 #include <SDL2/SDL_ttf.h>
 #include <cstdlib>
+#include <iostream>
+#include <assert.h>
 
 using namespace rend;
 
-InfoBox::InfoBox(int num_row, int num_col) {
+InfoBox::InfoBox(int num_row, int num_col, int x, int y) {
+    this->x = x;
+    this->y = y;
+
     num_cols = num_col;
     rows_per_col = num_row;
     row_width = 0;
@@ -54,6 +59,7 @@ InfoBox::~InfoBox() {
 int InfoBox::addRow() {
     lock->lock();
     if(rows_per_col == 0 || num_cols == 0) {
+        lock->unlock();
         return -1;
     }
 
@@ -85,6 +91,7 @@ int InfoBox::addRow() {
 int InfoBox::addCol() {
     lock->lock();
     if(rows_per_col == 0 || num_cols == 0) {
+        lock->unlock();
         return -1;
     }
 
@@ -117,6 +124,7 @@ int InfoBox::addCol() {
 int InfoBox::removeRow() {
     lock->lock();
     if (rows_per_col == 0 || num_cols == 0) {
+        lock->unlock();
         return -1;
     }
     rows_per_col--;
@@ -161,6 +169,7 @@ void InfoBox::setRowCol(int row, int col) {
 int InfoBox::removeCol() {
     lock->lock();
     if(rows_per_col == 0 || num_cols == 0) {
+        lock->unlock();
         return -1;
     }
 
@@ -188,11 +197,14 @@ int InfoBox::removeCol() {
     return num_cols;
 }
 
-void InfoBox::setName(int row, int col, string name) {
+void InfoBox::setName(int row, int col, std::string name) {
+    lock->lock();
     if (col >= num_cols || row >= rows_per_col) {
+        lock->unlock();
         return;
     }
     info_box_names[col][row] = name;
+    lock->unlock();
 }
 
 void InfoBox::setValue(int row, int col, string value) {
@@ -227,7 +239,9 @@ int InfoBox::determineCharWidth() {
     return width;
 }
 
-void InfoBox::render(SDL_Renderer *renderer, int x, int y) {
+void InfoBox::render(void *renderer_void) {
+    RenderEngine *engine = (RenderEngine*)renderer_void; 
+    SDL_Renderer *renderer = engine->getRendererHandle();
     int max_width_name = 0;
     int max_width_value = 0;
     for (int i = 0; i < num_cols; i++) {

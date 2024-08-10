@@ -6,7 +6,6 @@
 #include <SDL2/SDL.h>
 
 #include "../include/config.hpp"
-#include "../include/info_box.hpp"
 #include "../include/render_object.hpp"
 
 #include <mutex>
@@ -25,7 +24,7 @@ namespace rend {
             void setZoomFactor(double zf);
             double getZoomFactor();
              
-            void attachObject(std::unique_ptr<RenderObject> object);
+            void attachObject(RenderObject *object);
 
             void startRenderLoop();
             bool handleEvents();
@@ -38,13 +37,10 @@ namespace rend {
             void setCustomRenderFunction(void (override_func)(SDL_Renderer *renderer, SDL_Window *window));
             void setCustomOverlapFunction(void (override_func)(SDL_Renderer *renderer, SDL_Window *window));
             void setCustomSDLEventHandler(void (override_func)(SDL_Event *e));
-            void setCustomInfoBoxFunction(void (override_func)(InfoBox *info_box));
 
             SDL_Renderer *getRendererHandle();
             SDL_Window *getWindowHandle();
             SDL_Surface *getSurfaceHandle();
-
-            InfoBox* getInfoBox();
 
             int getHeight();
             int getWidth();
@@ -53,9 +49,7 @@ namespace rend {
             void posToLocal(double x, double y, int *local_x, int *local_y);
 
             bool isPaused();
-            bool isHidingInfoBox();
             void togglePlay();
-            void toggleInfoBox();
 
             void clearObjects();
 
@@ -83,14 +77,12 @@ namespace rend {
             SDL_Renderer *renderer;
             SDL_Surface *surface;
             SDL_Event e;
-            InfoBox *info_box;
 
-            std::vector<std::unique_ptr<RenderObject> > objects;
+            std::vector<RenderObject*> objects;
 
             void (*customRenderFunction)(SDL_Renderer *renderer, SDL_Window *window);
             void (*renderOverlapFunction)(SDL_Renderer *renderer, SDL_Window *window);
             void (*customSDLEventHandler)(SDL_Event *e);
-            void (*customInfoBoxFunction)(InfoBox *info_box);
 
             void drawBackground();
             void renderAllObjects();

@@ -57,20 +57,13 @@ RenderEngine::RenderEngine(int width, int height, int config) {
     renderLoop = false;
     paused = false;
     hide = false;
-    debug = config & REND_DEBUG;
- 
-    grid = config & REND_GRID;
 
-    if(config & REND_INFOBOX) {
-        info_box = new InfoBox(1, 1);
-    } else {
-        info_box = nullptr;
-    }
+    debug = config & REND_DEBUG;
+    grid = config & REND_GRID;
 
     customRenderFunction = nullptr;
     renderOverlapFunction = nullptr;
     customSDLEventHandler = nullptr;
-    customInfoBoxFunction = nullptr;
 
     startRenderLoop();
 
@@ -86,21 +79,12 @@ RenderEngine::~RenderEngine() {
     SDL_Quit();
     delete offset_x;
     delete offset_y;
-    delete info_box;
     lock.unlock();
 }
 
 void RenderEngine::renderFrame() {
     drawBackground();
     renderAllObjects();
-
-    if(info_box != nullptr && !hide) {
-        info_box->render(renderer, 15, 15);
-    }
-}
-
-InfoBox* RenderEngine::getInfoBox() {
-    return info_box;
 }
 
 void RenderEngine::posToLocal(double x, double y, int *local_x, int *local_y) {
@@ -117,10 +101,6 @@ void RenderEngine::setCustomOverlapFunction(void (override_func)(SDL_Renderer *r
 
 void RenderEngine::setCustomSDLEventHandler(void (override_func)(SDL_Event *e)) {
     customSDLEventHandler = override_func;
-}
-
-void RenderEngine::setCustomInfoBoxFunction(void (override_func)(InfoBox *info_box)) {
-    customInfoBoxFunction = override_func;
 }
 
 void RenderEngine::setBackgroundColor(int red, int green, int blue, int alpha) {
@@ -155,9 +135,9 @@ void RenderEngine::drawBackground() {
     }
 }
 
-void RenderEngine::attachObject(std::unique_ptr<RenderObject> object) {
+void RenderEngine::attachObject(RenderObject *object) {
     lock.lock();
-    objects.push_back(std::move(object));
+    objects.push_back(object);
     lock.unlock();
 }
 
@@ -232,9 +212,6 @@ void *RenderEngine::RenderLoop() {
             if(renderOverlapFunction != nullptr) {
                 renderOverlapFunction(renderer, window);
             }
-            if(customInfoBoxFunction != nullptr) {
-                customInfoBoxFunction(info_box);
-            }
             SDL_RenderPresent(renderer);
         }
         lock.unlock();
@@ -303,14 +280,6 @@ bool RenderEngine::isPaused() {
 
 void RenderEngine::togglePlay() {
     paused = !paused;
-}
-
-void RenderEngine::toggleInfoBox() {
-    hide = !hide;
-}
-
-bool RenderEngine::isHidingInfoBox() {
-    return hide;
 }
 
 void RenderEngine::clearObjects() {
