@@ -65,7 +65,7 @@ namespace rend {
 
             void drawAxis(SDL_Renderer *renderer);
             void drawPoints(SDL_Renderer *renderer);
-            void drawAxisText(SDL_Renderer *renderer, double max_x, double max_y);
+            void drawAxisText(SDL_Renderer *renderer, double max_x, double max_y, double min_x, double min_y);
             void updatePlotTexture(void *render_engine);
 
             bool *heights;

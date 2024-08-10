@@ -17,8 +17,8 @@ Plotter::Plotter(int x, int y, int width, int height) : RenderObject() {
     this->width = width;
     this->height = height;
 
-    x_display_round = 0;
-    y_display_round = 0;
+    x_display_round = 2;
+    y_display_round = 2;
         
     x_padding = 70;
     y_padding = 30;
@@ -139,14 +139,14 @@ double round_nth_decimal(double value, int n) {
     return round(value * pow(10, n)) / pow(10, n);
 };
 
-void Plotter::drawAxisText(SDL_Renderer *renderer, double max_x, double max_y) {
+void Plotter::drawAxisText(SDL_Renderer *renderer, double max_x, double max_y, double min_x, double min_y) {
     memset(heights, 0, 4000 * sizeof(bool));
     memset(widths, 0, 4000 * sizeof(bool));
 
     for(int i=0; i<plots.size(); i++) {
         for(int j=0; j<plots[i].x.size(); j++) {
             int x = x_padding - char_width;
-            int y = height - y_padding - (plots[i].y[j] / max_y) * (height - 2 * y_padding);
+            int y = height - y_padding - ((plots[i].y[j] - min_y) / (max_y - min_y)) * (height - 2 * y_padding);
             std::string text_before_cut = std::to_string(round_nth_decimal(plots[i].y[j], y_display_round));
             int cut_num = y_display_round > 0 ? y_display_round + 1 : 0;
             std::string text = text_before_cut.substr(0, text_before_cut.find(".") + cut_num);
@@ -182,7 +182,7 @@ void Plotter::drawAxisText(SDL_Renderer *renderer, double max_x, double max_y) {
             SDL_FreeSurface(surface);
             SDL_DestroyTexture(texture);
 
-            x = x_padding + (plots[i].x[j] / max_x) * (width - 2 * x_padding);
+            x = x_padding + ((plots[i].x[j] - min_x) / (max_x - min_x)) * (width - 2 * x_padding);
             y = height - y_padding + char_width;
 
             text_before_cut = std::to_string(round_nth_decimal(plots[i].x[j], x_display_round));
@@ -221,8 +221,10 @@ void Plotter::drawAxisText(SDL_Renderer *renderer, double max_x, double max_y) {
 }
 
 void Plotter::drawPoints(SDL_Renderer *renderer) {
-    double max_y, min_y = 0;
-    double max_x, min_x = 0;
+    double max_x = -INFINITY;
+    double max_y = -INFINITY;
+    double min_x = INFINITY;
+    double min_y = INFINITY;
 
     for (int i=0; i<plots.size(); i++) {
         for(int j=0; j<plots[i].x.size(); j++) {
@@ -253,7 +255,7 @@ void Plotter::drawPoints(SDL_Renderer *renderer) {
         for (int j=0; j<current_plot.y.size(); j++) {
             int x = initial_x + (current_plot.x[j] - min_x) / (max_x - min_x) * (width - 2 * x_padding);
             int y = initial_y - (current_plot.y[j] - min_y) / (max_y - min_y) * (height - 2 * y_padding);
-            if(j > 0) {
+            if(j > 0 && current_plot.link_points) { 
                 SDL_RenderDrawLine(renderer, prev_x, prev_y, x, y);
             }
             prev_x = x;
@@ -264,7 +266,7 @@ void Plotter::drawPoints(SDL_Renderer *renderer) {
         }
     }
 
-    drawAxisText(renderer, max_x, max_y);
+    drawAxisText(renderer, max_x, max_y, min_x, min_y);
 }
 void Plotter::updatePlotTexture(void *render_engine) {
     RenderEngine *engine = (RenderEngine*)render_engine;
