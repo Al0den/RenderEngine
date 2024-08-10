@@ -4,7 +4,6 @@
 
 #include <SDL2/SDL_ttf.h>
 #include <vector>
-#include <chrono>
 
 namespace rend {
     typedef struct Plot {
@@ -26,7 +25,6 @@ namespace rend {
             int plot(double *x, double *y, int num_values, SDL_Color color);
             int scatter(double *x, double *y, int num_values, SDL_Color color);
 
-            void setUpdateFrequency(double freq);
             void setAxisColor(SDL_Color color);
             void setXDisplayRound(int x);
             void setYDisplayRound(int y);
@@ -38,8 +36,6 @@ namespace rend {
 
         private:
             std::vector<plot_t> plots;
-
-
 
             int x_display_round;
             int y_display_round;
@@ -53,9 +49,6 @@ namespace rend {
             bool relative; // true for relative, false for fixed
             bool update;
 
-            std::chrono::steady_clock::time_point previous_update;
-            double update_frequency;
-                           
             int x_padding;
             int y_padding;
 

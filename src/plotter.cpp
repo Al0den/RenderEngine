@@ -42,9 +42,6 @@ Plotter::Plotter(int x, int y, int width, int height) : RenderObject() {
     SDL_FreeSurface(surface);
     plot_texture = nullptr;
 
-    previous_update = std::chrono::steady_clock::now();
-    update_frequency = 1000; // in milliseconds
-                             
     heights = new bool[4000];
     widths = new bool[4000];
 }
@@ -290,15 +287,10 @@ void Plotter::render(void *render_engine) {
     }
     if(plot_texture == nullptr) {
         plot_texture = SDL_CreateTexture(engine->getRendererHandle(), SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, width, height);
-        updatePlotTexture(render_engine);
+        update = true;
     }
     if(update) {
-        std::chrono::steady_clock::time_point current_time = std::chrono::steady_clock::now();
-        std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(current_time - previous_update);
-        if(time_span.count() * 1000 > update_frequency) {
-            updatePlotTexture(render_engine);
-            previous_update = current_time;
-        }
+        updatePlotTexture(render_engine);
     }
 
     SDL_Rect rect = {display_x, display_y, width, height};
@@ -320,10 +312,6 @@ void Plotter::removePlot(int plot_id) {
     plots.erase(plots.begin() + plot_id);
     RenderEngine::lock.unlock();
     update = true;
-}
-
-void Plotter::setUpdateFrequency(double freq) {
-    update_frequency = freq;
 }
 
 void Plotter::setAxisColor(SDL_Color color) {

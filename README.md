@@ -29,8 +29,6 @@ int main() {
 
     int pid = plotter->plot(nullptr, nullptr, 0, {255, 0, 0});
 
-    plotter->setDynamic(true);
-    plotter->setUpdateFrequency(100);
     plotter->setDrawPriority(1);
 
     renderer.attachObject(plotter);
