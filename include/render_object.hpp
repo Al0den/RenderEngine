@@ -8,7 +8,7 @@ namespace rend {
             RenderObject();
             virtual ~RenderObject();
             
-            virtual void render(void *render_engine) {};
+            virtual void render(void *render_engine) = 0;
 
             int draw_priority;
     };
