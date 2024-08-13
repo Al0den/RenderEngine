@@ -1,4 +1,4 @@
-#include "../include/renderer.hpp"
-#include "../include/render_object.hpp"
-#include "../include/plotter.hpp"
-#include "../include/info_box.hpp"
+#include "./renderer.hpp"
+#include "./render_object.hpp"
+#include "./render_objects/plotter.hpp"
+#include "./render_objects/info_box.hpp"

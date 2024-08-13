@@ -7,7 +7,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 
-#include "../include/render_object.hpp"
+#include "../render_object.hpp"
 
 using namespace std;
 

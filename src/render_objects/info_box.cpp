@@ -1,5 +1,5 @@
-#include "../include/info_box.hpp"
-#include "../include/renderer.hpp"
+#include "../../include/render_objects/info_box.hpp"
+#include "../../include/renderer.hpp"
 
 #include <SDL2/SDL_ttf.h>
 #include <cstdlib>

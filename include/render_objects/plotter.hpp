@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../include/render_object.hpp"
+#include "../render_object.hpp"
 
 #include <SDL2/SDL_ttf.h>
 #include <vector>

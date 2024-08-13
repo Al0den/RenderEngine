@@ -1,5 +1,5 @@
-#include "../include/plotter.hpp"
-#include "../include/renderer.hpp"
+#include "../../include/render_objects/plotter.hpp"
+#include "../../include/renderer.hpp"
 
 #include <iostream>
 #include <assert.h>
