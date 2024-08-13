@@ -253,13 +253,20 @@ void Plotter::drawPoints(SDL_Renderer *renderer) {
         return;
     }
 
-    min_x *= 0.9;
-    min_x *= 0.9;
-    max_x *= 1.1;
-    max_y *= 1.1;
+    if(max_x > 0) {
+        max_x *= 1.1;
+    } else {
+        max_x *= 0.9;
+    }
 
-    assert(min_x < max_x);
-    assert(min_y < max_y);
+    if(max_y > 0) {
+        max_y *= 1.1;
+    } else {
+        max_y *= 0.9;
+    }
+
+    assert(min_x <= max_x);
+    assert(min_y <= max_y);
 
     int initial_x = x_padding;
     int initial_y = height - y_padding;
@@ -270,8 +277,15 @@ void Plotter::drawPoints(SDL_Renderer *renderer) {
         plot_t current_plot = plots[i];
         SDL_SetRenderDrawColor(renderer, current_plot.color.r, current_plot.color.g, current_plot.color.b, 255);
         for (int j=0; j<(int)current_plot.y.size(); j++) {
-            int x = initial_x + (current_plot.x[j] - min_x) / (max_x - min_x) * (width - 2 * x_padding);
-            int y = initial_y - (current_plot.y[j] - min_y) / (max_y - min_y) * (height - 2 * y_padding);
+            int x, y;
+            if(max_x == min_x) {
+                x = initial_x + width/2;
+                y = initial_y + height/2;
+            } else {
+                x = initial_x + (current_plot.x[j] - min_x) / (max_x - min_x) * (width - 2 * x_padding);
+                y = initial_y - (current_plot.y[j] - min_y) / (max_y - min_y) * (height - 2 * y_padding);
+            }
+            std::cout << x << "; " << y << std::endl;
             if(j > 0 && current_plot.link_points) { 
                 SDL_RenderDrawLine(renderer, prev_x, prev_y, x, y);
             }
