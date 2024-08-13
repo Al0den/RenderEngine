@@ -26,8 +26,8 @@ InfoBox::InfoBox(int num_row, int num_col, int x, int y) : RenderObject() {
         info_box_values[i] = new string[rows_per_col];
         
         for (int j=0; j<rows_per_col; j++) {
-            info_box_names[i][j] = "Empty";
-            info_box_values[i][j] = "Void";
+            info_box_names[i][j] = "";
+            info_box_values[i][j] = "";
         }
     }
 
@@ -246,10 +246,10 @@ void InfoBox::render(void *render_engine) {
     int max_width_value = 0;
     for (int i = 0; i < num_cols; i++) {
         for (int j = 0; j < rows_per_col; j++) {
-            if (info_box_names[i][j].length() > max_width_name) {
+            if ((int)info_box_names[i][j].length() > max_width_name) {
                 max_width_name = info_box_names[i][j].length();
             }
-            if (info_box_values[i][j].length() > max_width_value) {
+            if ((int)info_box_values[i][j].length() > max_width_value) {
                 max_width_value = info_box_values[i][j].length();
             }
         }

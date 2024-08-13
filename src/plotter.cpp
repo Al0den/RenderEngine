@@ -2,6 +2,7 @@
 #include "../include/renderer.hpp"
 
 #include <iostream>
+#include <assert.h>
 
 using namespace rend;
 
@@ -85,10 +86,8 @@ int Plotter::scatter(double *x, double *y, int num_values, SDL_Color color) {
 }
 
 void Plotter::drawAxis(SDL_Renderer *renderer) {
-
     SDL_SetRenderDrawColor(renderer, axis_color.r, axis_color.g, axis_color.b, 255);
 
-    // x-axis
     int line_start_x, line_start_y;
     int line_end_x, line_end_y;
     line_start_x = x_padding;
@@ -112,7 +111,6 @@ void Plotter::drawAxis(SDL_Renderer *renderer) {
 
     SDL_RenderDrawLine(renderer, line_start_x, line_start_y, line_end_x, line_end_y);
 
-    // y-axis
     line_start_x = x_padding;
     line_start_y = height - y_padding;
     line_end_x = width - x_padding;
@@ -141,10 +139,17 @@ void Plotter::drawAxisText(SDL_Renderer *renderer, double max_x, double max_y, d
     memset(heights, 0, 4000 * sizeof(bool));
     memset(widths, 0, 4000 * sizeof(bool));
 
+
     for(int i=0; i<(int)plots.size(); i++) {
         for(int j=0; j<(int)plots[i].x.size(); j++) {
-            int x = x_padding - char_width;
-            int y = height - y_padding - ((plots[i].y[j] - min_y) / (max_y - min_y)) * (height - 2 * y_padding);
+            int x, y;
+
+            x = x_padding - char_width;
+            if(min_y != max_y) {
+                y = height - y_padding - ((plots[i].y[j] - min_y) / (max_y - min_y)) * (height - 2 * y_padding);
+            } else {
+                y = height - y_padding;
+            }
             std::string text_before_cut = std::to_string(round_nth_decimal(plots[i].y[j], y_display_round));
             int cut_num = y_display_round > 0 ? y_display_round + 1 : 0;
             std::string text = text_before_cut.substr(0, text_before_cut.find(".") + cut_num);
@@ -180,7 +185,11 @@ void Plotter::drawAxisText(SDL_Renderer *renderer, double max_x, double max_y, d
             SDL_FreeSurface(surface);
             SDL_DestroyTexture(texture);
 
-            x = x_padding + ((plots[i].x[j] - min_x) / (max_x - min_x)) * (width - 2 * x_padding);
+            if(min_x != max_x) {
+                x = x_padding + ((plots[i].x[j] - min_x) / (max_x - min_x)) * (width - 2 * x_padding);
+            } else {
+                x = x_padding;
+            }
             y = height - y_padding + char_width;
 
             text_before_cut = std::to_string(round_nth_decimal(plots[i].x[j], x_display_round));
@@ -240,10 +249,18 @@ void Plotter::drawPoints(SDL_Renderer *renderer) {
             }
         }
     }
+    if(max_x == -INFINITY || min_x == INFINITY || min_y == INFINITY || max_y == -INFINITY) {
+        return;
+    }
+
     min_x *= 0.9;
     min_x *= 0.9;
     max_x *= 1.1;
     max_y *= 1.1;
+
+    assert(min_x < max_x);
+    assert(min_y < max_y);
+
     int initial_x = x_padding;
     int initial_y = height - y_padding;
 
