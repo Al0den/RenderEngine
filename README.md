@@ -10,8 +10,9 @@ By default, this renderer already runs in a separate thread.
 This requires the use of the C++14 standard (For the use of vectors)
 
 Clone this folder to a third-party folder, and you can then simply include it inside your main project.
+This isnt a header only library, and you will need to locally compile all files in `src`, `src/render_objects`
+You can then include file `include/RenderEngine` to include the entirety of the engine
 Note that everything is under the namespace `rend`
-
 
 # Examples
 
