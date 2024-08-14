@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 
+#include <SDL_keycode.h>
 #include <SDL_render.h>
 #include <iostream>
 #include <assert.h>
@@ -66,10 +67,13 @@ RenderEngine::RenderEngine(int width, int height, int config) {
     renderOverlapFunction = nullptr;
     customSDLEventHandler = nullptr;
 
+    mode = 0;
+
     startRenderLoop();
 
     setBackgroundColor(32, 32, 32, 255);
     setGridColor(242, 242, 242, 255);
+
 }
 
 RenderEngine::~RenderEngine() {
@@ -85,7 +89,21 @@ RenderEngine::~RenderEngine() {
 
 void RenderEngine::renderFrame() {
     drawBackground();
-    renderAllObjects();
+    if(mode == 0) {
+        renderAllObjects();
+    } else if(mode == 1) {
+        renderAllBoundingBoxes();
+    }
+}
+
+void RenderEngine::renderAllBoundingBoxes() {
+    SDL_SetRenderDrawColor(getRendererHandle(), 0, 255, 0, 255);
+    for(int i=0; i<(int)bounding_objects.size(); i++) {
+        BoundingBox box = bounding_objects[i]->getBoundingBox();
+        SDL_Rect rect = {box.bounding_x, box.bounding_y, box.bounding_width, box.bounding_height};
+        SDL_RenderDrawRect(getRendererHandle(), &rect);
+    }
+    return;
 }
 
 void RenderEngine::posToLocal(double x, double y, int *local_x, int *local_y) {
@@ -109,6 +127,20 @@ void RenderEngine::setBackgroundColor(int red, int green, int blue, int alpha) {
     background_color[1] = green;
     background_color[2] = blue;
     background_color[3] = alpha;
+}
+
+void RenderEngine::updateObjects() {
+    click_objects.clear();
+    bounding_objects.clear();
+
+    for(int i=0; i<(int)objects.size(); i++) {
+        if(objects[i]->boundingBoxActivated()) {
+            bounding_objects.push_back(objects[i]);
+        }
+        if(objects[i]->clicksActivated()) {
+            click_objects.push_back(objects[i]);
+        }
+    }
 }
 
 void RenderEngine::setGridColor(int red, int green, int blue, int alpha) {
@@ -137,8 +169,17 @@ void RenderEngine::drawBackground() {
 }
 
 void RenderEngine::attachObject(RenderObject *object) {
+    if(object->clicksActivated()) {
+        assert(object->boundingBoxActivated());
+    }
     lock.lock();
     objects.push_back(object);
+    if(object->clicksActivated()) {
+        click_objects.push_back(object);
+    }
+    if(object->boundingBoxActivated()) {
+        bounding_objects.push_back(object);
+    }
     lock.unlock();
 }
 
@@ -163,6 +204,12 @@ bool RenderEngine::handleEvents() {
 
         if(customSDLEventHandler != nullptr) {
             customSDLEventHandler(&e);
+        }
+
+        if(e.type == SDL_MOUSEBUTTONDOWN) {
+            for(int i=0; i<(int)click_objects.size(); i++) {
+                click_objects[i]->onClick(e.motion.x, e.motion.y, e.button.button);
+            }
         }
 
         if(e.type == SDL_KEYDOWN) {
@@ -195,6 +242,11 @@ bool RenderEngine::handleEvents() {
             case SDLK_h:
                 hide = !hide;
                 break;
+            case SDLK_SPACE:
+                mode++;
+                if(mode > 1) {
+                    mode = 0;
+                }
             }
         }
     }

@@ -3,16 +3,20 @@
 #include <SDL_render.h>
 
 #include <iostream>
+#include <assert.h>
 
 using namespace rend;
 
 RenderObject::RenderObject() {
     draw_priority = 0;
+    clicks = false;
+    bounding_box = false;
 }
 
 RenderObject::~RenderObject() {}
 
 void RenderObject::render(void *render_engine) {
+    assert(render_engine != nullptr);
     std::cout << "Warning: Tried to render a RenderObject" << std::endl;
     return;
 }
@@ -27,11 +31,49 @@ void RenderObject::setDrawPriority(int priority) {
     RenderEngine::lock.unlock();
 }
 
+void RenderObject::setBoundingBox(int x, int y, int width, int height) {
+    bounding_box = true;
+    box = {x, y, width, height};
+}
+
+void RenderObject::toggleClick() {
+    clicks = !clicks;
+}
+
+void RenderObject::toggleClick(bool toggle) {
+    clicks = toggle;
+} 
+
+void RenderObject::toggleBoundingBox() {
+    bounding_box = !bounding_box;
+}
+
+void RenderObject::toggleBoundingBox(bool toggle) {
+    bounding_box = toggle;
+}
+
+void RenderObject::onClick(int x, int y) {
+    assert(x >= 0 && y >= 0);
+    return;
+}
+
+bool RenderObject::boundingBoxActivated() {
+    return bounding_box;
+}
+
+bool RenderObject::clicksActivated() {
+    return clicks;
+}
+
+BoundingBox RenderObject::getBoundingBox() {
+    return box;
+}
+
 BallRenderer::BallRenderer(double *x, double *y, double rad, unsigned char red, unsigned char green, unsigned char blue, int draw_priority) : RenderObject() {
     this->x = x;
     this->y = y;
     this->rad = rad;
-    this->red =red;
+    this->red = red;
     this->blue = blue;
     this->green = green;
     setDrawPriority(draw_priority);

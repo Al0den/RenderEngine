@@ -45,6 +45,9 @@ Plotter::Plotter(int x, int y, int width, int height) : RenderObject() {
 
     heights = new bool[4000];
     widths = new bool[4000];
+
+    toggleBoundingBox(true);
+    setBoundingBox(x, y, width, height);
 }
 
 Plotter::~Plotter() {
@@ -285,7 +288,6 @@ void Plotter::drawPoints(SDL_Renderer *renderer) {
                 x = initial_x + (current_plot.x[j] - min_x) / (max_x - min_x) * (width - 2 * x_padding);
                 y = initial_y - (current_plot.y[j] - min_y) / (max_y - min_y) * (height - 2 * y_padding);
             }
-            std::cout << x << "; " << y << std::endl;
             if(j > 0 && current_plot.link_points) { 
                 SDL_RenderDrawLine(renderer, prev_x, prev_y, x, y);
             }

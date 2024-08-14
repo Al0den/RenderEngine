@@ -3,6 +3,13 @@
 #include <SDL2/SDL.h>
 
 namespace rend {
+    typedef struct BoundingBox_s {
+        int bounding_x;
+        int bounding_y;
+        int bounding_width;
+        int bounding_height;
+    } BoundingBox;
+
     class RenderObject {
         public:
             RenderObject();
@@ -12,9 +19,27 @@ namespace rend {
 
             int getDrawPriority();
             void setDrawPriority(int priority);
+            
+            bool boundingBoxActivated();
+            void toggleBoundingBox();
+            void toggleBoundingBox(bool toggle);
+            void setBoundingBox(int x, int y, int width, int height);
+            BoundingBox getBoundingBox();
+            
+            bool clicksActivated();
+            void toggleClick();
+            void toggleClick(bool toggle);
+            virtual void onClick(int x, int y, Uint8 button);
+
+            virtual void updatePosition();
 
         private:
             int draw_priority;
+
+            bool clicks;
+            bool bounding_box;
+
+            BoundingBox box;
     };
 
     class BallRenderer : public RenderObject {

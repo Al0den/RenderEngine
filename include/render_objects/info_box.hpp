@@ -17,7 +17,6 @@ namespace rend {
             InfoBox(int num_row, int num_col, int x, int y);
             ~InfoBox();
 
-
             int addRow();
             int addCol();
 

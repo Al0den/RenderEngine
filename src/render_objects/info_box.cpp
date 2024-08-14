@@ -39,6 +39,9 @@ InfoBox::InfoBox(int num_row, int num_col, int x, int y) : RenderObject() {
     }
 
     lock = &(rend::RenderEngine::lock);
+    
+    toggleBoundingBox(true);
+    setBoundingBox(x, y, 1, 1);
 }
 
 InfoBox::~InfoBox() {
@@ -261,6 +264,8 @@ void InfoBox::render(void *render_engine) {
 
     int total_width = (max_width_name + 2 + max_width_value + padding * 2) * char_width * num_cols;
     int total_height = (char_height + padding) * rows_per_col;
+
+    setBoundingBox(display_x, display_y, total_width, total_height);
 
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); 
     SDL_Rect rect = {display_x, display_y, total_width, total_height};

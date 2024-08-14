@@ -52,9 +52,8 @@ namespace rend {
             void togglePlay();
 
             void clearObjects();
-
+            void updateObjects();
         private:
-
             SDL_Window *window;
 
             double zoom_factor;
@@ -79,6 +78,8 @@ namespace rend {
             SDL_Event e;
 
             std::vector<RenderObject*> objects;
+            std::vector<RenderObject*> click_objects;
+            std::vector<RenderObject*> bounding_objects;
 
             void (*customRenderFunction)(SDL_Renderer *renderer, SDL_Window *window);
             void (*renderOverlapFunction)(SDL_Renderer *renderer, SDL_Window *window);
@@ -86,8 +87,12 @@ namespace rend {
 
             void drawBackground();
             void renderAllObjects();
+            void renderAllBoundingBoxes();
 
             int background_color[4];
             int grid_color[4];
+            
+            // 0 - Base renderer, 1 - Show bounding boxes
+            int mode;
     };
 }
