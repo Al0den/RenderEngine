@@ -74,6 +74,7 @@ RenderEngine::RenderEngine(int width, int height, int config) {
     setBackgroundColor(32, 32, 32, 255);
     setGridColor(242, 242, 242, 255);
 
+    dragging = false;
 }
 
 RenderEngine::~RenderEngine() {
@@ -193,11 +194,22 @@ double RenderEngine::getZoomFactor() {
     return zoom_factor;
 }
 
+bool inBoundingBox(int x, int y, BoundingBox box) {
+    if(x > box.bounding_x && x < box.bounding_x + box.bounding_width && y > box.bounding_y && y < box.bounding_y + box.bounding_height) {
+        return true;
+    }
+    return false;
+}
+
 bool RenderEngine::handleEvents() {
     if (!renderLoop) {
         return false;
     }
+    bool still_dragging;
+    RenderObject* objectDragged = nullptr;
+
     while(SDL_PollEvent(&e) != 0) {
+        still_dragging = false;
         if(e.type == SDL_QUIT) {
             renderLoop = false;
         }
@@ -209,6 +221,25 @@ bool RenderEngine::handleEvents() {
         if(e.type == SDL_MOUSEBUTTONDOWN) {
             for(int i=0; i<(int)click_objects.size(); i++) {
                 click_objects[i]->onClick(e.motion.x, e.motion.y, e.button.button);
+            }
+            if(e.button.button == SDL_BUTTON_LEFT) {
+                if(!dragging) {
+                    start_x = e.motion.x;
+                    start_y = e.motion.y; 
+                    for(int i=0; i<(int)bounding_objects.size(); i++) {
+                        if(inBoundingBox(start_x, start_y, objects[i]->getBoundingBox())) {
+                            objectDragged = objects[i];
+                            break;
+                        }
+                    }
+                }
+
+                if(objectDragged != nullptr) {
+                    std::cout << "Started dragging" << std::endl;
+                    still_dragging = true;
+                    dragging = true;
+                }
+
             }
         }
 
@@ -248,6 +279,19 @@ bool RenderEngine::handleEvents() {
                     mode = 0;
                 }
             }
+        }
+
+        if(!still_dragging && dragging) {
+            std::cout << "Finished dragging" << std::endl;
+            assert(objectDragged != nullptr);
+            // Finished dragging;
+            int finish_x, finish_y;
+            finish_x = e.motion.x;
+            finish_y = e.motion.y;
+            BoundingBox box = objectDragged->getBoundingBox();
+            objectDragged->updatePosition(finish_x - start_x, finish_y - start_y);
+            dragging = false;
+            objectDragged = nullptr;
         }
     }
     lock.unlock();

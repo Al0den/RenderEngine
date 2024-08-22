@@ -52,8 +52,17 @@ void RenderObject::toggleBoundingBox(bool toggle) {
     bounding_box = toggle;
 }
 
-void RenderObject::onClick(int x, int y) {
+void RenderObject::onClick(int x, int y, Uint8 button) {
     assert(x >= 0 && y >= 0);
+    return;
+}
+
+void RenderObject::customPositionUpdate() {
+    return;
+}
+
+void RenderObject::updatePosition(int displacement_x, int displacement_y) {
+    std::cout << displacement_x << " " << displacement_y << std::endl;
     return;
 }
 

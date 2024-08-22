@@ -42,6 +42,8 @@ InfoBox::InfoBox(int num_row, int num_col, int x, int y) : RenderObject() {
     
     toggleBoundingBox(true);
     setBoundingBox(x, y, 1, 1);
+
+    toggleClick(true);
 }
 
 InfoBox::~InfoBox() {

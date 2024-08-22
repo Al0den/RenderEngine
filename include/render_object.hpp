@@ -31,7 +31,8 @@ namespace rend {
             void toggleClick(bool toggle);
             virtual void onClick(int x, int y, Uint8 button);
 
-            virtual void updatePosition();
+            void updatePosition(int displacement_x, int displacement_y);
+            virtual void customPositionUpdate();
 
         private:
             int draw_priority;

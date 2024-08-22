@@ -94,5 +94,7 @@ namespace rend {
             
             // 0 - Base renderer, 1 - Show bounding boxes
             int mode;
+            bool dragging;
+            int start_x, start_y;
     };
 }
