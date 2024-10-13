@@ -75,6 +75,7 @@ RenderEngine::RenderEngine(int width, int height, int config) {
     setGridColor(242, 242, 242, 255);
 
     dragging = false;
+    objectDragged = nullptr;
 }
 
 RenderEngine::~RenderEngine() {
@@ -206,10 +207,8 @@ bool RenderEngine::handleEvents() {
         return false;
     }
     bool still_dragging;
-    RenderObject* objectDragged = nullptr;
 
     while(SDL_PollEvent(&e) != 0) {
-        still_dragging = false;
         if(e.type == SDL_QUIT) {
             renderLoop = false;
         }
@@ -222,40 +221,21 @@ bool RenderEngine::handleEvents() {
             for(int i=0; i<(int)click_objects.size(); i++) {
                 click_objects[i]->onClick(e.motion.x, e.motion.y, e.button.button);
             }
-            if(e.button.button == SDL_BUTTON_LEFT) {
-                if(!dragging) {
-                    start_x = e.motion.x;
-                    start_y = e.motion.y; 
-                    for(int i=0; i<(int)bounding_objects.size(); i++) {
-                        if(inBoundingBox(start_x, start_y, objects[i]->getBoundingBox())) {
-                            objectDragged = objects[i];
-                            break;
-                        }
-                    }
-                }
-
-                if(objectDragged != nullptr) {
-                    std::cout << "Started dragging" << std::endl;
-                    still_dragging = true;
-                    dragging = true;
-                }
-
-            }
         }
 
         if(e.type == SDL_KEYDOWN) {
             switch(e.key.keysym.sym) {
             case SDLK_UP:
-                *offset_y -= (double)w / 20 / zoom_factor;
+                *offset_y -= (double)w / (20 * zoom_factor);
                 break;
             case SDLK_DOWN:
-                *offset_y += (double)h / 20 / zoom_factor;
+                *offset_y += (double)h / (20 * zoom_factor);
                 break;
             case SDLK_LEFT:
-                *offset_x -= (double)w / 20 / zoom_factor;
+                *offset_x -= (double)w / (20 * zoom_factor);
                 break;
             case SDLK_RIGHT:
-                *offset_x += (double)w / 20 / zoom_factor;
+                *offset_x += (double)w / (20 * zoom_factor);
                 break;
             case SDLK_EQUALS:
                 zoom_factor *= 1.1;
@@ -281,18 +261,6 @@ bool RenderEngine::handleEvents() {
             }
         }
 
-        if(!still_dragging && dragging) {
-            std::cout << "Finished dragging" << std::endl;
-            assert(objectDragged != nullptr);
-            // Finished dragging;
-            int finish_x, finish_y;
-            finish_x = e.motion.x;
-            finish_y = e.motion.y;
-            BoundingBox box = objectDragged->getBoundingBox();
-            objectDragged->updatePosition(finish_x - start_x, finish_y - start_y);
-            dragging = false;
-            objectDragged = nullptr;
-        }
     }
     lock.unlock();
     return renderLoop;

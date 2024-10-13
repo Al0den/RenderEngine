@@ -1,6 +1,6 @@
 .git
 lib
-buid
+build
 *.o
 *.out
 examples

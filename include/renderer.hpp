@@ -92,6 +92,7 @@ namespace rend {
             int background_color[4];
             int grid_color[4];
             
+            RenderObject* objectDragged;
             // 0 - Base renderer, 1 - Show bounding boxes
             int mode;
             bool dragging;
