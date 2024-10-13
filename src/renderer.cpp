@@ -206,7 +206,6 @@ bool RenderEngine::handleEvents() {
     if (!renderLoop) {
         return false;
     }
-    bool still_dragging;
 
     while(SDL_PollEvent(&e) != 0) {
         if(e.type == SDL_QUIT) {
